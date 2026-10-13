@@ -5,6 +5,7 @@
 - Patched MonoGame DesktopGL, importer and patch assembly compile.
 - ARM64 native binaries built with Debian 11 cross tools; glibc symbol ceiling checked.
 - Windows/Linux runtime-pack fixtures, repeat imports, runtime-major rejection and native architecture filtering pass.
+- Cecil dependency resolution reproduces a held DLL handle; overlay replacement succeeds after closing the rewrite scope, including exception paths.
 - Launcher mock tests cover vanilla launch, 720×480 fallback, platform hook, failed patching, invalid mode, cleanup and game exit status.
 - Motor helper tests cover commands, timeout, pipe EOF, SIGTERM, missing device and malformed input.
 - Managed-to-native integration covers player routing, both vibration channels, stop, timeout and close.

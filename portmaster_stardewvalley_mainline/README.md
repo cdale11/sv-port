@@ -28,6 +28,16 @@ installation directory and is not a second side-by-side mainline installation.
 When switching game versions or Windows/Linux sources, replace `gamedata/` with a
 clean copy; keep `savedata/` and `Mods/` separate.
 
+### v0.1.1 upgrade for the locked MonoGame DLL error
+
+If v0.1.0 aborts at `CopyOverlayFiles` with `MonoGame.Framework.dll` in use, close
+the game and extract `stardewvalley-rg34xxsp-patcher-hotfix.zip` from Releases into
+`/userdata/roms/ports/`, allowing replacement. This ZIP contains only the patcher
+folder under `stardewvalleymainline/tools/`; existing game files, saves, mods and
+configuration stay in place. Launch again. The patcher now disposes Cecil's cached
+dependency assemblies before overlay copying. A fresh game import is unnecessary
+for this specific failure.
+
 ## Device support
 
 | Feature | Implementation and current limit |

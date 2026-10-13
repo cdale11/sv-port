@@ -5,6 +5,7 @@ string root = Path.Combine(Path.GetTempPath(), "sdv-import-" + Guid.NewGuid());
 Directory.CreateDirectory(root);
 try
 {
+    AssemblyHandleTests.Run(root);
     foreach (string rid in new[] { "win-x64", "linux-x64", "linux-arm64" })
     foreach (string version in new[] { "6.0.32", "6.0.36" })
     {

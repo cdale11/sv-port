@@ -4,6 +4,17 @@ using System.Text.Json.Nodes;
 // Shared by the importer and retail-free regression fixtures.
 internal static class GameImport
 {
+    internal static void CopyOverlayFiles(string overlayDir, string gameDir)
+    {
+        if (!Directory.Exists(overlayDir)) return;
+        foreach (var sourcePath in Directory.EnumerateFiles(overlayDir, "*", SearchOption.AllDirectories))
+        {
+            var destinationPath = Path.Combine(gameDir, Path.GetRelativePath(overlayDir, sourcePath));
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath) ?? gameDir);
+            File.Copy(sourcePath, destinationPath, overwrite: true);
+        }
+    }
+
     private const string Target = ".NETCoreApp,Version=v6.0/linux-arm64";
     private const string PackPrefix = "runtimepack.Microsoft.NETCore.App.Runtime.";
     private static JsonObject Read(string path) => JsonNode.Parse(File.ReadAllText(path),

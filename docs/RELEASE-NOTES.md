@@ -1,3 +1,9 @@
+**v0.1.1 fixes the startup abort at `CopyOverlayFiles` where `MonoGame.Framework.dll` is reported as being in use.** The patcher now closes Mono.Cecil's cached dependency assemblies before copying overlays, including exception paths. A regression fixture reproduces the held handle and verifies replacement after cleanup.
+
+**Upgrading v0.1.0:** close the game, extract `stardewvalley-rg34xxsp-patcher-hotfix.zip` into `/userdata/roms/ports/`, and allow replacement. The hotfix contains only `stardewvalleymainline/tools/MainlineGameDataPatcher/`; game files, saves, mods and configuration are untouched. Launch again; this failure does not require recopying your game installation.
+
+The bind-mount message and PortMaster's missing `glxinfo` warning were not the fatal error. KNULLI's PortMaster GL script falls back to GLES when its GL probe fails.
+
 Experimental Stardew Valley mainline port for **Anbernic RG34XXSP running KNULLI**.
 
 - Windows and Linux Steam .NET 6 mainline import paths.

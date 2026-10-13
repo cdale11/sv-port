@@ -137,16 +137,8 @@ static void AlignGameAssemblyVersionsForSmapi(string gameDir)
         return;
     }
 
-    var resolver = new DefaultAssemblyResolver();
-    resolver.AddSearchDirectory(gameDir);
-    var readerParameters = new ReaderParameters
-    {
-        InMemory = true,
-        ReadSymbols = false,
-        AssemblyResolver = resolver,
-    };
-
-    using var smapiAssembly = AssemblyDefinition.ReadAssembly(smapiAssemblyPath, readerParameters);
+    using var scope = new AssemblyReadScope(smapiAssemblyPath, gameDir);
+    var smapiAssembly = scope.Assembly;
     var expectedVersions = smapiAssembly.MainModule.AssemblyReferences
         .Where(reference => reference.Name is "Stardew Valley" or "StardewValley.GameData")
         .ToDictionary(reference => reference.Name, reference => reference.Version);
@@ -169,16 +161,8 @@ static void AlignAssemblyVersion(string gameDir, string fileName, IReadOnlyDicti
         return;
     }
 
-    var resolver = new DefaultAssemblyResolver();
-    resolver.AddSearchDirectory(gameDir);
-    var readerParameters = new ReaderParameters
-    {
-        InMemory = true,
-        ReadSymbols = false,
-        AssemblyResolver = resolver,
-    };
-
-    using var assembly = AssemblyDefinition.ReadAssembly(assemblyPath, readerParameters);
+    using var scope = new AssemblyReadScope(assemblyPath, gameDir);
+    var assembly = scope.Assembly;
     if (assembly.Name.Version == expectedVersion)
     {
         return;
@@ -220,17 +204,8 @@ static void PatchGameAssemblyMethods(string gameDir)
 {
     var assemblyPath = Path.Combine(gameDir, "Stardew Valley.dll");
     var tempPath = assemblyPath + ".methods.tmp";
-    var resolver = new DefaultAssemblyResolver();
-    resolver.AddSearchDirectory(gameDir);
-
-    var readerParameters = new ReaderParameters
-    {
-        InMemory = true,
-        ReadSymbols = false,
-        AssemblyResolver = resolver,
-    };
-
-    using var assembly = AssemblyDefinition.ReadAssembly(assemblyPath, readerParameters);
+    using var scope = new AssemblyReadScope(assemblyPath, gameDir);
+    var assembly = scope.Assembly;
     var module = assembly.MainModule;
 
     var optionsType = GetRequiredType(module, "StardewValley.Options");
@@ -1011,39 +986,14 @@ static bool NeedsArchitectureNormalization(string assemblyPath)
 static void NormalizeAssemblyArchitecture(string assemblyPath)
 {
     var tempPath = assemblyPath + ".tmp";
-    var resolver = new DefaultAssemblyResolver();
-    resolver.AddSearchDirectory(Path.GetDirectoryName(assemblyPath) ?? Environment.CurrentDirectory);
-
-    var readerParameters = new ReaderParameters
-    {
-        InMemory = true,
-        ReadSymbols = false,
-        AssemblyResolver = resolver,
-    };
-
-    using var module = ModuleDefinition.ReadModule(assemblyPath, readerParameters);
+    using var scope = new AssemblyReadScope(assemblyPath, Path.GetDirectoryName(assemblyPath) ?? Environment.CurrentDirectory);
+    var module = scope.Assembly.MainModule;
     module.Architecture = TargetArchitecture.I386;
     module.Attributes |= ModuleAttributes.ILOnly;
     module.Attributes &= ~ModuleAttributes.Required32Bit;
     module.Attributes &= ~ModuleAttributes.Preferred32Bit;
     module.Write(tempPath, new WriterParameters { WriteSymbols = false });
     File.Move(tempPath, assemblyPath, overwrite: true);
-}
-
-static void CopyOverlayFiles(string overlayDir, string gameDir)
-{
-    if (!Directory.Exists(overlayDir))
-    {
-        return;
-    }
-
-    foreach (var sourcePath in Directory.EnumerateFiles(overlayDir, "*", SearchOption.AllDirectories))
-    {
-        var relativePath = Path.GetRelativePath(overlayDir, sourcePath);
-        var destinationPath = Path.Combine(gameDir, relativePath);
-        Directory.CreateDirectory(Path.GetDirectoryName(destinationPath) ?? gameDir);
-        File.Copy(sourcePath, destinationPath, overwrite: true);
-    }
 }
 
 static void CopyDirectoryContents(string sourceDir, string destinationDir)

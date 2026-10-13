@@ -673,6 +673,18 @@ EOF
 
   python3 "$ROOT/tests/check_package.py" "$archive_path"
 
+  # Upgrade existing installations without touching their game files, saves,
+  # mods or device configuration.
+  local hotfix_root="$OUT/patcher-hotfix"
+  local hotfix_name=stardewvalley-rg34xxsp-patcher-hotfix.zip
+  local hotfix_relative=stardewvalleymainline/tools/MainlineGameDataPatcher
+  rm -rf "$hotfix_root"
+  mkdir -p "$hotfix_root/$hotfix_relative"
+  cp -R "$release_game_dir/tools/MainlineGameDataPatcher/." "$hotfix_root/$hotfix_relative/"
+  rm -f "$RELEASE_DIR/$hotfix_name"
+  (cd "$hotfix_root" && zip -qr "$RELEASE_DIR/$hotfix_name" stardewvalleymainline)
+  (cd "$RELEASE_DIR" && sha256sum "$hotfix_name" > "$hotfix_name.sha256")
+
 }
 
 if [ "$VALIDATE_ONLY" -eq 0 ]; then

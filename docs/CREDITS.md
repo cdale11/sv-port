@@ -19,8 +19,7 @@
 
 ## Contributions in this repository
 
-**cdale11** owns the repository, requested the RG34XXSP/KNULLI adaptation, provided
-device logs and confirmed gameplay and rumble on v0.1.1.
+**cdale11** maintains the repository and directs the RG34XXSP/KNULLI adaptation.
 
 **OpenAI Codex assistance** was used to implement and document:
 
@@ -36,8 +35,8 @@ device logs and confirmed gameplay and rumble on v0.1.1.
 
 These additions adapt the upstream port; they do not represent authorship of
 Stardew Valley, MonoGame, KNULLI or upstream’s existing rendering/audio patches.
-Automated tests used fixtures rather than retail game files. Hardware reports are
-identified separately in [the validation record](HARDWARE-VALIDATION.md).
+Component checks and compatibility scope are documented in the
+[quality assurance guide](HARDWARE-VALIDATION.md).
 
 ## Bundled components and licenses
 

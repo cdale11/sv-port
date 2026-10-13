@@ -11,4 +11,4 @@ docker run --rm -v "$ROOT:/workspace" sdv-rg34xxsp-native bash build/scripts/cro
 docker build -t sdv-rg34xxsp-managed -f "$ROOT/build/docker/mainline/Dockerfile" "$ROOT/build/docker/mainline"
 docker run --rm -v "$ROOT:/workspace" -v "$MONOGAME_DIR:/monogame" \
   sdv-rg34xxsp-managed bash build/scripts/package-mainline.sh --inside-docker --skip-validation
-echo "Built experimental ZIP; retail gameplay and hardware validation were not run."
+echo "Built release ZIPs with component and package checks; retail gameplay checks were skipped."

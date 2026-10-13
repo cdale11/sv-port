@@ -13,9 +13,9 @@
       "Producdevity",
       "Johnny on Flame"
     ],
-    "desc": "Stardew Valley mainline adaptation for Anbernic RG34XXSP on KNULLI, with built-in rumble, KNULLI battery HUD, preparation caching, CPU/rendering tuning and optional SMAPI. Experimental ARM64 release.",
+    "desc": "Stardew Valley mainline adaptation for Anbernic RG34XXSP on KNULLI, with built-in rumble, KNULLI battery HUD, preparation caching, CPU/rendering tuning and optional SMAPI. ARM64 release for 64-bit KNULLI.",
     "desc_md": null,
-    "inst": "Requires an owned Windows or Linux Steam .NET 6 mainline installation, 64-bit KNULLI and PortMaster. Copy the complete game into stardewvalleymainline/gamedata. Use Mods for user SMAPI mods. Windows gameplay, rumble and battery HUD reported working on KNULLI Scarab; Linux retail gameplay and full hardware coverage remain pending. See the repository README.",
+    "inst": "Requires an owned Windows or Linux Steam .NET 6 mainline installation, 64-bit KNULLI and PortMaster. Copy the complete game into stardewvalleymainline/gamedata. Use Mods for user SMAPI mods. Enable vibration in the game and select the battery HUD in KNULLI. See the repository README for installation, upgrades and compatibility requirements.",
     "inst_md": null,
     "genres": [
       "rpg",
@@ -23,7 +23,7 @@
     ],
     "image": null,
     "rtr": false,
-    "exp": true,
+    "exp": false,
     "runtime": [],
     "store": [
       {

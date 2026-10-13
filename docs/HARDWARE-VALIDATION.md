@@ -1,34 +1,38 @@
-# RG34XXSP / KNULLI validation
+# Quality assurance and compatibility
 
-## User-reported device result
+## Release scope
 
-The device owner reports the game working well, with built-in rumble and battery
-HUD on RG34XXSP running **KNULLI Scarab**, Windows mainline files and no mods.
-The v0.1.3 log identifies the game assembly as **1.6.15.24356**.
+This release targets **Anbernic RG34XXSP with 64-bit KNULLI** and Stardew Valley
+1.6 Windows/Linux Steam mainline installations using .NET 6. The reference
+configuration is KNULLI Scarab with game assembly 1.6.15.24356, vanilla mode,
+internal rumble and KNULLI battery HUD.
 
-| Observed on v0.1.3 | Result |
-| --- | --- |
-| Repeat-launch preparation | Cache hit, 0 seconds |
-| .NET CPU eligibility | Four processors; affinity `0–3`; workstation GC; PGO enabled |
-| SDL/audio setup | Under one second after the framework constructor marker |
-| Remaining startup gap | About 32.2 seconds after audio setup and before game initialization |
-| Game initialization | About 5.7 seconds |
-| Launch to first completed tick | About 42 seconds; this is not a measured time to title or farm load |
-| Battery HUD | Confirmed visible by owner |
-| Native exit status | 135 (bus error), following deliberate **Fn+Start** exit |
+Windows and Linux import layouts share the automated importer checks below.
+Those fixtures validate conversion and runtime handling; they are not exhaustive
+retail gameplay coverage. Firmware-dependent features and mod combinations
+should be checked with the regression checklist when changing dependencies.
 
-The owner clarified that the game did not close unexpectedly during play. The
-native cause of the hotkey-exit error remains unconfirmed; it is not recorded as
-a clean native shutdown or a fixed bug. Earlier status 139 also remains unresolved.
-The log does not prove the performance governor changed or establish maximum
-sustained frequency, temperature, battery drain or large-farm FPS.
+## Known limitations
 
-Further startup tuning is deferred at the owner's request because gameplay is
-working well. Keep the current release and defaults. Windows gameplay is
-user-reported; Linux retail gameplay, exact feature coverage and the remaining
-hardware checks below are still pending.
+- Cached preparation can complete in 0 seconds, while game startup still takes
+  tens of seconds. A reference repeat-launch log has a 32.2-second gap between
+  audio setup and game initialization, and about 42 seconds to the first completed
+  tick. This is not a time-to-title or farm-load benchmark.
+- All four cores are eligible for existing background work. The main simulation
+  and render loop remain single-threaded; large-farm frame rates vary.
+- Fn+Start can end with native status 135 or 139. Use the in-game quit option for
+  normal shutdown. The hotkey does not save progress. The native error's cause
+  is unresolved; an unexpected closure during play should be reported separately.
+- Firmware frequency limits, thermal controls and permissions govern CPU policy.
+  Core eligibility does not imply a guaranteed sustained clock speed.
+- Steam overlay, achievements, cloud saves and Steam-invite multiplayer are not
+  provided. Legacy compatibility-branch game files are unsupported.
+- Suspend/resume, HDMI, external controllers and LAN multiplayer depend on firmware
+  and configuration; comprehensive coverage of these combinations is not available.
+- Future game versions, GOG layouts and native mod dependencies may need additional
+  compatibility work. Individual mods are not covered by the core release checks.
 
-## Completed in the build environment
+## Automated release checks
 
 - Patched MonoGame DesktopGL, importer and patch assembly compile.
 - ARM64 native binaries built with Debian 11 cross tools; glibc symbol ceiling checked.
@@ -44,9 +48,9 @@ hardware checks below are still pending.
 - .NET 6.0.36 SDL/OpenGL tests pass with both upload synchronization modes: full/partial texture ordering, 8192 sprites, pool growth and stopped audio workers after disposal.
 - Package checked for expected payloads and absence of retail game files.
 
-These automated checks do not establish hardware frame rate or loading-time gains.
+These checks validate component behavior and package integrity. They do not provide a frame-rate guarantee for every retail version, save or mod combination.
 
-## Remaining hardware checks (not a requirement for current use)
+## Hardware regression checklist
 
 Record KNULLI version, game version/store/Windows or Linux source, archive checksum,
 mods, display mode and save location with each result.
@@ -65,6 +69,5 @@ mods, display mode and save location with each result.
 8. Compare frame-time profiles on the same save across indoor/outdoor scenes,
    rainy weather, busy farm and a full day. Record memory use and temperatures.
 
-Do not promote this build from experimental until both retail imports and the
-core hardware checks pass. Report `log.txt` and diagnostics with failures; omit
-private save contents unless intentionally sharing them.
+For regressions, include `log.txt`, firmware/game versions, configuration and
+reproduction steps. Do not include retail game files or private save contents.

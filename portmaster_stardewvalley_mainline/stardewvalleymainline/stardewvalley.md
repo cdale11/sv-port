@@ -1,8 +1,8 @@
 # Stardew Valley — RG34XXSP / KNULLI
 
-Experimental ARM64 adaptation of the Stardew Valley mainline PortMaster port for
+ARM64 adaptation of the Stardew Valley mainline PortMaster port for
 Anbernic RG34XXSP running 64-bit KNULLI. Includes internal motor rumble, preparation
-caching and optional SMAPI. Stardew Valley is sold separately.
+caching, KNULLI battery HUD, CPU/rendering optimizations and optional SMAPI. Stardew Valley is sold separately.
 
 ## Installation
 
@@ -19,9 +19,11 @@ internal motor.
 ## Documentation and limits
 
 The [repository README](https://github.com/cdale11/sv-port#readme) contains downloads,
-upgrade steps, controls, settings, troubleshooting and current validation limits.
-Gameplay and internal rumble have been reported working; performance comparisons,
-full retail-version coverage and suspend/resume still need hardware validation.
+upgrade steps, controls, settings, troubleshooting and compatibility requirements.
+The target is RG34XXSP with 64-bit KNULLI and the Stardew 1.6 mainline .NET 6
+layout. Startup can take tens of seconds. Firmware features and mods depend on
+configuration and compatible dependencies. Use the in-game quit option for normal
+shutdown; Fn+Start does not save progress and can produce a native exit error.
 Steam overlay, achievements, cloud saves and Steam-invite multiplayer are unavailable.
 
 Based on Producdevity’s mainline port and Johnny on Flame’s original PortMaster

@@ -1,19 +1,57 @@
-**v0.1.3 adds CPU/rendering optimizations and restores KNULLI's selected battery HUD.**
+# Stardew Valley for RG34XXSP / KNULLI — v1.0.0
 
-- Request all online cores and temporarily use the supported performance governor; restore the previous governor on handled exit. No overclock is applied. Main simulation/rendering remains single-threaded.
-- Enable tiered JIT, quick loop compilation and dynamic PGO; remove artificial processor-count caps and align imported runtime configuration.
-- Remove redundant GPU-wide texture upload waits and start with a larger sprite pool, which still grows for bigger scenes. These reduce framework overhead; large-farm FPS improvements have not been measured.
-- Preserve KNULLI battery/performance HUD context by default (`SDV_HUD=auto`). The old `SDV_PERFORMANCE_OVERLAY=0` no longer hides it. Helpers do not load the HUD.
-- Fix built-in shader resource names and stop audio workers before native teardown. A subsequent status 135 followed deliberate Fn+Start exit; neither that native error nor earlier status 139 has a confirmed cause or fix.
-- Add early managed startup, CPU eligibility and framework phase logs to locate the remaining startup delay.
-- Retain preparation caching, Windows/Linux mainline import handling and built-in rumble.
+A stable ARM64 PortMaster release for Anbernic RG34XXSP running 64-bit KNULLI,
+with Windows/Linux Steam mainline import handling, internal rumble and optional
+SMAPI support. Supply your own Stardew Valley installation; no retail files are
+included.
 
-**Upgrade:** close the game, back up saves, then extract `stardewvalley-rg34xxsp-performance-update.zip` into `/userdata/roms/ports/`, allowing replacement. Includes launcher/helpers, importer, patch DLL and MonoGame overlay. Does not include or overwrite retail game files, saves, mods or your configuration. Missing new config settings use their defaults. Select the battery HUD in KNULLI and launch through its menu. Compare loading on the second launch.
+## Included features
 
-**Fresh install:** use `stardewvalleymainline.zip`, then supply a clean owned Windows or Linux Steam .NET 6 mainline installation. No retail files are included.
+- Built-in RG34XXSP motor rumble with an independent shutdown/watchdog helper.
+- KNULLI-selected battery/performance HUD preserved by default.
+- Preparation caching for unchanged game files and dependencies.
+- All available CPU cores eligible for background work, reversible performance
+  governor selection, workstation GC and tiered JIT/PGO.
+- Reduced texture-upload synchronization and larger initial sprite pools.
+- Persistent saves, PortMaster controller/display integration, startup diagnostics
+  and optional SMAPI 4.5.2.
 
-**Validation:** 27 Python checks, managed import and rumble integration checks, package validation and .NET 6.0.36 SDL/OpenGL graphics/audio smoke tests passed. Graphics tests cover full/partial texture ordering, 8192 sprites, pool growth and worker shutdown with synchronization enabled and disabled. Subsequent owner feedback confirms gameplay/rumble and battery HUD on KNULLI Scarab with Windows game assembly 1.6.15.24356 and no mods. The repeat log shows 0-second preparation, four available CPUs and a remaining 32.2-second pre-initialization gap. Status 135 followed deliberate Fn+Start exit, not an unexpected closure during play. Further startup tuning is deferred; large-farm FPS and clean hotkey-exit behavior remain unverified. Performance governor mode can increase heat and battery usage.
+## Install or upgrade
 
-[Install/configure](https://github.com/cdale11/sv-port#readme) · [Performance settings](https://github.com/cdale11/sv-port/blob/main/docs/PERFORMANCE.md) · [Hardware validation](https://github.com/cdale11/sv-port/blob/main/docs/HARDWARE-VALIDATION.md)
+**New installation:** extract `stardewvalleymainline.zip` into
+`/userdata/roms/ports/`, then copy a complete owned Windows or Linux Steam .NET 6
+mainline installation into `stardewvalleymainline/gamedata/`.
 
-Documentation was refreshed after the device feedback. Downloaded v0.1.3 archives remain unchanged; the repository contains the latest validation record.
+**Existing v0.1.x installation:** close the game, back up saves and extract
+`stardewvalley-rg34xxsp-performance-update.zip` into `/userdata/roms/ports/`,
+allowing replacement. Saves, mods, retail game files and configuration are
+preserved. Runtime behavior is unchanged from v0.1.3; there is no required
+configuration change. The full install package contains the refreshed docs and
+metadata; the upgrade contains only runtime components and helpers.
+
+## Compatibility and operation
+
+Target: RG34XXSP, 64-bit KNULLI, Stardew 1.6 mainline .NET 6 layout. Reference
+configuration: KNULLI Scarab, game assembly 1.6.15.24356. Game startup can take
+tens of seconds even when preparation is cached. Main simulation/rendering
+remains single-threaded; performance varies with farm complexity and mods.
+Performance governor mode can increase heat and battery usage.
+
+Use the in-game quit option for normal shutdown. Fn+Start does not save progress
+and can produce native exit status 135/139. Steam services are unavailable;
+legacy compatibility-branch game files are unsupported. Firmware-dependent
+features, future game updates and individual mods have separate compatibility
+requirements described in the guide.
+
+## Release checks
+
+Automated checks cover launcher/CPU/HUD policy, Windows/Linux import fixtures,
+managed/native rumble routing, package integrity and .NET 6.0.36 SDL/OpenGL
+rendering/audio behavior. Graphics checks include full/partial texture ordering,
+8192 sprites, sprite-pool growth and audio-worker shutdown in both texture
+synchronization modes. These checks do not guarantee performance or every
+firmware, retail-version and mod combination.
+
+[Installation and configuration](https://github.com/cdale11/sv-port#readme) ·
+[Performance settings](https://github.com/cdale11/sv-port/blob/main/docs/PERFORMANCE.md) ·
+[Quality assurance and compatibility](https://github.com/cdale11/sv-port/blob/main/docs/HARDWARE-VALIDATION.md)

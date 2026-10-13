@@ -3,7 +3,7 @@
   <game>
     <path>./StardewValleyMainline.sh</path>
     <name>Stardew Valley (RG34XXSP / KNULLI)</name>
-    <desc>Stardew Valley mainline PortMaster adaptation for Anbernic RG34XXSP running KNULLI. Includes built-in motor rumble, startup preparation caching and optional SMAPI. Requires your own clean Windows or Linux Steam mainline game files. Experimental ARM64 community port; see the repository README for installation and current limits.</desc>
+    <desc>Stardew Valley mainline PortMaster adaptation for Anbernic RG34XXSP running KNULLI. Includes built-in motor rumble, KNULLI battery HUD, preparation caching, CPU/rendering optimizations and optional SMAPI. Requires your own clean Windows or Linux Steam mainline game files. ARM64 community port; see the repository README for installation and current limits.</desc>
     <image>./stardewvalleymainline/cover.png</image>
     <releasedate>20160226T000000</releasedate>
     <developer>ConcernedApe</developer>

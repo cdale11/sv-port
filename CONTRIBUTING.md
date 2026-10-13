@@ -36,10 +36,10 @@ into the install archive; do not maintain duplicate copies in the template.
 `docs/RELEASE-NOTES.md` describes the current release, while `CHANGELOG.md` records
 all published versions.
 
-The manual **Port checks** workflow builds packages and publishes the prerelease
+The manual **Port checks** workflow builds packages and publishes the release
 specified in its release step. Before publishing a new version, update that tag,
 title, release notes and download links together. Published historical release
 assets should remain associated with their original versions.
 
-A new feature remains experimental until its hardware checks are recorded. See
+Document compatibility limits and relevant checks for new features. See
 [HARDWARE-VALIDATION.md](docs/HARDWARE-VALIDATION.md).

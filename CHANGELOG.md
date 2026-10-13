@@ -1,14 +1,15 @@
 # Changelog
 
-All releases remain experimental. Loading-time and FPS improvements are not yet
-measured on the handheld. See [hardware validation](docs/HARDWARE-VALIDATION.md).
+Release history for the RG34XXSP/KNULLI port.
 
-## Unreleased — documentation maintenance
+## v1.0.0 — stable release
 
-- Record v0.1.3 battery HUD confirmation, four-core eligibility, game assembly
-  version, measured startup stages and deliberate Fn+Start exit context.
-- Document normal quit/save behavior and defer further startup tuning.
-- Add focused issue and pull-request templates; retain existing release archives.
+[Release and downloads](https://github.com/cdale11/sv-port/releases/tag/rg34xxsp-knulli-v1.0.0)
+
+- Publish the current runtime as a stable release with updated package metadata.
+- Refresh installation, compatibility, performance and troubleshooting guidance.
+- Replace development-status wording with feature documentation and known limitations.
+- Keep the v0.1.3 runtime, rumble, HUD and CPU/rendering behavior unchanged.
 
 ## v0.1.3 — CPU, rendering and battery HUD
 
@@ -49,9 +50,8 @@ measured on the handheld. See [hardware validation](docs/HARDWARE-VALIDATION.md)
   exception paths.
 - Add a regression fixture reproducing and checking the locked-DLL failure.
 - Provide a patcher-only hotfix ZIP.
-- Gameplay and internal rumble subsequently reported working by the device owner.
 
-## v0.1.0 — initial RG34XXSP / KNULLI prerelease
+## v0.1.0 — initial RG34XXSP / KNULLI release
 
 [Release and downloads](https://github.com/cdale11/sv-port/releases/tag/rg34xxsp-knulli-v0.1.0)
 

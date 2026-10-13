@@ -9,12 +9,12 @@ Stardew Valley is sold separately. **No retail game files are included.**
 
 ## Downloads
 
-Current prerelease: **[v0.1.3](https://github.com/cdale11/sv-port/releases/tag/rg34xxsp-knulli-v0.1.3)**.
+Current release: **[v1.0.0](https://github.com/cdale11/sv-port/releases/tag/rg34xxsp-knulli-v1.0.0)**.
 
 | Your installation | Download |
 | --- | --- |
-| New installation | [Full install ZIP](https://github.com/cdale11/sv-port/releases/download/rg34xxsp-knulli-v0.1.3/stardewvalleymainline.zip) |
-| Existing v0.1.0–v0.1.2 installation | [Performance upgrade ZIP](https://github.com/cdale11/sv-port/releases/download/rg34xxsp-knulli-v0.1.3/stardewvalley-rg34xxsp-performance-update.zip) |
+| New installation | [Full install ZIP](https://github.com/cdale11/sv-port/releases/download/rg34xxsp-knulli-v1.0.0/stardewvalleymainline.zip) |
+| Existing v0.1.x installation | [Performance upgrade ZIP](https://github.com/cdale11/sv-port/releases/download/rg34xxsp-knulli-v1.0.0/stardewvalley-rg34xxsp-performance-update.zip) |
 
 Checksums are available on the release page. GitHub’s **Source code** archives contain the build sources and are not complete install packages. See the [changelog](CHANGELOG.md) for previous releases.
 
@@ -26,15 +26,20 @@ Checksums are available on the release page. GitHub’s **Source code** archives
 
 | Area | Current status |
 | --- | --- |
-| Gameplay and internal rumble | Reported working by the device owner; v0.1.3 logs confirm the motor bridge initializes on KNULLI Scarab. |
-| Windows/Linux imports | Import fixtures pass. Exact retail version/source coverage is still incomplete; future game updates may require port changes. |
-| Battery HUD and CPU eligibility | Battery display confirmed working on v0.1.3; the device log shows four CPUs and affinity `0–3`. |
-| Startup and large-farm performance | Repeat preparation is 0 seconds; about 32 seconds remain before initialization. Large-farm FPS gains are unmeasured. |
-| SMAPI | Bundled version 4.5.2. Individual mods depend on matching game/API versions, available memory and compatible native libraries. |
-| Audio recovery, lid suspend/resume, HDMI, external controllers and LAN multiplayer | Firmware integration is retained; full hardware validation is pending. Closing the lid does not save the game. |
+| Gameplay and internal rumble | Built-in motor bridge for RG34XXSP/KNULLI; enable vibration in the game settings. |
+| Windows/Linux imports | Mainline .NET 6 import handling, with runtime layout checks and desktop-library cleanup. |
+| Battery HUD and CPU scheduling | Preserves KNULLI's selected HUD and requests all available CPU cores. |
+| Startup and large farms | Cached preparation, tiered JIT/PGO and rendering optimizations. Game initialization can still take tens of seconds; farm complexity affects frame rate. |
+| SMAPI | Bundled version 4.5.2. Mods require matching game/API versions and compatible ARM64 dependencies. |
+| Firmware integration | Uses PortMaster's display, controller and platform integration. Suspend, HDMI and external-controller behavior depends on KNULLI configuration. Closing the lid does not save the game. |
 | Steam services | Steam overlay, achievements, cloud saves and Steam-invite multiplayer are unavailable through the upstream API stubs. |
 
-This remains an **experimental prerelease**. The importer retains upstream’s Stardew 1.6 patches and checks for the .NET 6 runtime layout. The legacy compatibility branch is unsupported; GOG and other devices/firmware are unvalidated. See [validation details](docs/HARDWARE-VALIDATION.md).
+The target platform is **RG34XXSP with 64-bit KNULLI**, using the Stardew 1.6
+mainline .NET 6 layout. KNULLI Scarab and game assembly 1.6.15.24356 are the
+reference configuration. Future game updates may require port changes. The
+legacy compatibility branch is unsupported; GOG and other devices/firmware are
+outside this release's compatibility scope. See [quality assurance and known
+limitations](docs/HARDWARE-VALIDATION.md).
 
 ## Install
 
@@ -119,7 +124,7 @@ Edit `stardewvalleymainline/rg34xxsp.conf` with the game closed.
 
 The old `SDV_PERFORMANCE_OVERLAY` setting is superseded and ignored, so an existing value of `0` no longer hides the battery meter. Select the battery HUD in KNULLI and leave `SDV_HUD=auto`. Performance governor mode can use more battery and generate more heat; the launcher restores the original governor on handled exit.
 
-Keep the shipped performance defaults for normal play. Further investigation of the startup delay is deferred at the owner’s request; no extra tuning is required.
+The shipped defaults are recommended for normal play. See [performance settings](docs/PERFORMANCE.md) for optional configuration and diagnostics.
 
 The cache compares file size, modification/change timestamps and inode metadata rather than hashing all DLL contents. If you deliberately replace files while preserving their metadata, force preparation or delete `stardewvalleymainline/.preparation-cache`.
 
@@ -138,7 +143,7 @@ The main log is `stardewvalleymainline/log.txt`.
 | --- | --- |
 | Slow startup | Look for `Preparation cache hit` on a repeat launch. Compare `Startup preparation`, total launcher time and game-start/patch-initialization timestamps. |
 | Battery HUD missing | Select the HUD in KNULLI, use `SDV_HUD=auto` and launch through the KNULLI menu. An SSH launch may lack HUD context. |
-| Exit status 135/139 | The owner confirmed status 135 after deliberately exiting with Fn+Start, not an unexpected closure during play. Its native cause is unconfirmed. For an unexpected closure, report the scene and final log. |
+| Exit status 135/139 | Fn+Start can produce a native exit error. Prefer the in-game quit option for normal shutdown. For an unexpected closure during play, report the scene and final log. |
 | Cache never hits | Check for changed game/mod files, `SDV_FORCE_PREPARE=1`, or the cache-unavailable message. |
 | Missing/incomplete game files | Check the `gamedata/` layout and copy a clean mainline installation. |
 | `MonoGame.Framework.dll` reported in use at `CopyOverlayFiles` | Upgrade from v0.1.0; v0.1.1 and later close Cecil dependency handles before copying. |
@@ -156,7 +161,7 @@ bash tools/diagnose-rg34xxsp --rumble-test
 
 The second command produces a 150 ms motor pulse. A missing or unwritable motor interface requires firmware with working RG34XXSP rumble support.
 
-For deeper profiling, create `profiling.enabled` in the port folder before launching. Logs are written under `logs/`; remove the marker after recording because profiling adds overhead. Compare the same save/location with the same mods and display mode. Hardware speed gains have not been measured by this repository’s automated tests.
+For deeper profiling, create `profiling.enabled` in the port folder before launching. Logs are written under `logs/`; remove the marker after recording because profiling adds overhead. Compare the same save/location with the same mods and display mode. Automated checks validate behavior; loading time and frame rate depend on the game files, storage, save and display settings.
 
 [Open an issue](https://github.com/cdale11/sv-port/issues/new) with the release, KNULLI version, game version and Windows/Linux source, mod list, reproduction steps and relevant log. For loading reports, include first- and second-launch times. Avoid including private save contents unless intentionally sharing them.
 
@@ -176,11 +181,11 @@ Artifacts are written to `build/out/mainline/release/`. Building uses .NET SDK 8
 | `build/src/`, `build/rg34xxsp/`, `build/patches/` | Importer, native helpers, managed rumble bridge and MonoGame patch |
 | `build/scripts/`, `build/docker/` | Build and packaging tools |
 | `tests/` | Launcher, rumble, import and package regression checks |
-| `docs/` | Credits, current release notes and validation record |
+| `docs/` | Credits, current release notes and quality assurance guide |
 | `scripts/` | Profiling comparison and PortMaster tree export |
 | `.github/workflows/` | Automated checks and release packaging |
 
-Read [CONTRIBUTING.md](https://github.com/cdale11/sv-port/blob/main/CONTRIBUTING.md) before submitting changes. The project direction, repository and hardware feedback come from **cdale11**; the device adaptation, fixes, tests and documentation were developed with **OpenAI Codex assistance**. Upstream contributors are credited separately in [CREDITS.md](docs/CREDITS.md).
+Read [CONTRIBUTING.md](https://github.com/cdale11/sv-port/blob/main/CONTRIBUTING.md) before submitting changes. The repository and project direction come from **cdale11**; the device adaptation, fixes, tests and documentation were developed with **OpenAI Codex assistance**. Upstream contributors are credited separately in [CREDITS.md](docs/CREDITS.md).
 
 ## License and acknowledgements
 

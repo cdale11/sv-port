@@ -103,7 +103,7 @@ staging. Do not commit duplicate package documentation.
 
 Pushes and pull requests run component checks. Manually dispatch **Port checks**
 to run checks, build packages, upload Actions artifacts and publish the configured
-prerelease. The release tag/title are currently defined in
+release. The release tag/title are currently defined in
 `.github/workflows/checks.yml`; update them with `docs/RELEASE-NOTES.md`,
 `CHANGELOG.md` and README links when releasing a new version. Rerunning the workflow
 can replace assets on that configured release, so confirm the intended version.

@@ -1,33 +1,29 @@
-## Notes
+# Stardew Valley — RG34XXSP / KNULLI
 
-Thanks to [ConcernedApe](https://www.stardewvalley.net/) for creating Stardew Valley.
+Experimental ARM64 adaptation of the Stardew Valley mainline PortMaster port for
+Anbernic RG34XXSP running 64-bit KNULLI. Includes internal motor rumble, preparation
+caching and optional SMAPI. Stardew Valley is sold separately.
 
-Thanks to the [MonoGame](https://github.com/MonoGame/MonoGame) project for the framework that makes this port possible.
+## Installation
 
-Thanks to JohnnyonFlame for the original Stardew Valley PortMaster port and help with this mainline port.
+Install/update PortMaster, then copy a complete clean Windows or Linux Steam
+.NET 6 mainline game installation into `ports/stardewvalleymainline/gamedata/`.
+Disable the legacy compatibility beta. Game files from different platforms or
+versions must not be mixed. The copied files are prepared on first launch.
 
-This port requires the Windows or Linux Steam mainline version of Stardew Valley. Install the regular mainline Steam build, then copy all files from the Stardew Valley install folder into `ports/stardewvalleymainline/gamedata`.
+Leave `stardewvalleymainline/Mods/` empty for vanilla play, or install compatible
+SMAPI mods there. Persistent saves live in `stardewvalleymainline/savedata/`.
+Enable vibration in the game and leave `SDV_RUMBLE=1` in `rg34xxsp.conf` for the
+internal motor.
 
-Make sure Stardew Valley is not opted into the legacy _compatibility_ branch. The port patches the copied game files automatically on launch.
+## Documentation and limits
 
-SMAPI is bundled. Leave `ports/stardewvalleymainline/Mods` empty for vanilla play, or copy SMAPI mods into that folder to launch through SMAPI automatically. Do not place user mods inside `gamedata/Mods`.
+The [repository README](https://github.com/cdale11/sv-port#readme) contains downloads,
+upgrade steps, controls, settings, troubleshooting and current validation limits.
+Gameplay and internal rumble have been reported working; performance comparisons,
+full retail-version coverage and suspend/resume still need hardware validation.
+Steam overlay, achievements, cloud saves and Steam-invite multiplayer are unavailable.
 
-**SMAPI support is experimental.** Some mods may not work due to native Windows or x64 dependencies or not having enough memory.
-
-Use your current Steam installation with the compatibility beta disabled.
-See the included README.md for KNULLI installation, rumble and known limits.
-
-## Controls
-
-| Button             | Action                 |
-| ------------------ | ---------------------- |
-| Left Stick / D-Pad | Move / menu navigation |
-| Right Stick        | Move cursor            |
-| A                  | Confirm / interact     |
-| B                  | Cancel / back          |
-| X                  | Use tool               |
-| Y                  | Open menu              |
-| L1 / R1            | Cycle toolbar row      |
-| L2 / R2            | Cycle toolbar item     |
-| Start              | Pause / open menu      |
-| Select             | Open Journal           |
+Based on Producdevity’s mainline port and Johnny on Flame’s original PortMaster
+work. See [credits](https://github.com/cdale11/sv-port/blob/main/docs/CREDITS.md) for
+upstream sources, the RG34XXSP adaptation and AI-assisted development disclosure.

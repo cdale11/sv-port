@@ -7,7 +7,9 @@ import zipfile
 with zipfile.ZipFile(sys.argv[1]) as package:
     names = set(package.namelist())
     base = 'stardewvalleymainline/'
-    for name in ['StardewValleyMainline.sh', 'README.md', 'BUILD-STATUS.txt', 'SHA256SUMS'] + [base + p for p in [
+    for name in ['StardewValleyMainline.sh', 'README.md', 'LICENSE', 'CHANGELOG.md',
+                 'docs/CREDITS.md', 'docs/HARDWARE-VALIDATION.md', 'docs/RELEASE-NOTES.md',
+                 'BUILD-STATUS.txt', 'SHA256SUMS'] + [base + p for p in [
         'libs.aarch64/rg34xxsp-rumble', 'tools/rg34xxsp-profile',
         'tools/diagnose-rg34xxsp', 'tools/preparation-cache', 'dotnet/dotnet',
         'overrides/gamedata/MonoGame.Framework.dll',

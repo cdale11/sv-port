@@ -16,3 +16,19 @@ stardewvalley_steam/
 build/*.log
 tests/**/bin/
 tests/**/obj/
+
+# Local retail imports and user data must never enter the template or Git.
+portmaster_stardewvalley_mainline/stardewvalleymainline/gamedata/*
+!portmaster_stardewvalley_mainline/stardewvalleymainline/gamedata/.gitkeep
+portmaster_stardewvalley_mainline/stardewvalleymainline/Mods/*
+!portmaster_stardewvalley_mainline/stardewvalleymainline/Mods/.gitkeep
+portmaster_stardewvalley_mainline/stardewvalleymainline/savedata/*
+!portmaster_stardewvalley_mainline/stardewvalleymainline/savedata/.gitkeep
+!portmaster_stardewvalley_mainline/stardewvalleymainline/savedata/Saves/
+portmaster_stardewvalley_mainline/stardewvalleymainline/savedata/Saves/*
+!portmaster_stardewvalley_mainline/stardewvalleymainline/savedata/Saves/.gitkeep
+portmaster_stardewvalley_mainline/stardewvalleymainline/log.txt
+portmaster_stardewvalley_mainline/stardewvalleymainline/logs/
+portmaster_stardewvalley_mainline/stardewvalleymainline/.launch.lock
+portmaster_stardewvalley_mainline/stardewvalleymainline/.preparation-cache*
+portmaster_stardewvalley_mainline/stardewvalleymainline/profiling.enabled

@@ -1,97 +1,135 @@
-# Stardew Valley — RG34XXSP / KNULLI
+# Stardew Valley for RG34XXSP / KNULLI
 
-Experimental ARM64 port for the **Anbernic RG34XXSP running KNULLI**, based on
-[Producdevity's mainline port](https://github.com/Producdevity/portmaster-stardew-valley-mainline).
-Windows and Linux Steam mainline imports are implemented. This is a compiled,
-retail-free test release. A user has confirmed v0.1.1 gameplay and built-in rumble
-on RG34XXSP/KNULLI. The v0.1.2 performance changes still need device comparisons;
-no FPS or full compatibility claim is made.
+[![Port checks](https://github.com/cdale11/sv-port/actions/workflows/checks.yml/badge.svg)](https://github.com/cdale11/sv-port/actions/workflows/checks.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## Download and install
+An ARM64 PortMaster fork of [Producdevity’s Stardew Valley mainline port](https://github.com/Producdevity/portmaster-stardew-valley-mainline), adapted for the **Anbernic RG34XXSP running KNULLI**. It adds built-in motor rumble, Windows/Linux mainline import handling, startup preparation caching and device-specific defaults while retaining optional SMAPI support.
 
-1. Install/update PortMaster on 64-bit KNULLI. Download the ZIP from
-   [Releases](https://github.com/cdale11/sv-port/releases), not GitHub's source ZIP.
-2. Extract into `/userdata/roms/ports/` (the network share is `roms/ports`). The
-   launcher must sit beside `stardewvalleymainline/`, without another enclosing folder.
-3. Copy a **complete, clean Windows or Linux Steam mainline installation** into
-   `stardewvalleymainline/gamedata/`. Both use `Stardew Valley.dll`,
-   `Stardew Valley.deps.json`, `Stardew Valley.runtimeconfig.json`, and `Content/`.
-   Do not mix Windows/Linux files or use the legacy compatibility beta. The copied
-   files are patched in place, so keep the original PC installation as your backup.
-4. Refresh KNULLI's game list and launch **StardewValleyMainline** from Ports.
-   First launch includes patching and may take longer.
-5. Enable controller vibration in Stardew's settings. Install mods in
-   `stardewvalleymainline/Mods/` if desired; leave it empty for vanilla.
+Stardew Valley is sold separately. **No retail game files are included.**
 
-If replacing an existing mainline port, back up its entire folder first, especially
-`savedata/`, `Mods/` and `rg34xxsp.conf`. This fork deliberately keeps the upstream
-installation directory and is not a second side-by-side mainline installation.
-When switching game versions or Windows/Linux sources, replace `gamedata/` with a
-clean copy; keep `savedata/` and `Mods/` separate.
+## Downloads
 
-### v0.1.2 upgrade for an existing installation
+Current prerelease: **[v0.1.2](https://github.com/cdale11/sv-port/releases/tag/rg34xxsp-knulli-v0.1.2)**.
 
-Close the game and extract `stardewvalley-rg34xxsp-performance-update.zip` from
-[v0.1.2 Releases](https://github.com/cdale11/sv-port/releases/tag/rg34xxsp-knulli-v0.1.2)
-into `/userdata/roms/ports/`, allowing replacement. This updates the launcher,
-preparation helpers, patcher and small patch DLL. Game files, saves, mods and
-`rg34xxsp.conf` stay in place. It includes the v0.1.1 DLL-lock fix.
-
-The first launch prepares the files and creates `.preparation-cache`. Later
-launches compare dependency file metadata and skip CoreCLR/Cecil preparation when
-unchanged. Game/patcher/overlay/native-library changes and SMAPI mode or assembly
-changes invalidate the cache. Content textures/maps do not require assembly
-repatching. A failed preparation never creates a valid cache. If metadata tools
-are unavailable, the launcher falls back to normal preparation.
-
-Cache checks inspect sizes, timestamps and inode metadata, not every file's
-contents. When deliberately replacing files while preserving their metadata,
-force preparation by adding `SDV_FORCE_PREPARE=1` to `rg34xxsp.conf` for one launch,
-then reset it to `0`; deleting `.preparation-cache` also works.
-
-DLL architecture checks now read only PE/CLI headers. MangoHud injection is
-filtered out by default for this port, preserving other preload libraries. Add
-`SDV_PERFORMANCE_OVERLAY=1` to the existing config if you want KNULLI's overlay
-injection preserved. The update ZIP does not overwrite your config.
-
-The log includes preparation duration, total launcher duration, game-start time
-and patch-initialization time. These distinguish launcher work from subsequent
-game/audio/content loading. Hardware loading-time and FPS gains are unmeasured.
-
-## Device support
-
-| Feature | Implementation and current limit |
+| Your installation | Download |
 | --- | --- |
-| Display | Native 720×480 fallback; uses PortMaster's dimensions for HDMI. Upstream UI/viewport patches retained. |
-| Controls | KNULLI/PortMaster SDL mappings; sticks, D-pad, triggers, face buttons, cursor and exit helper retained. No hard-coded controller GUID. |
-| Built-in rumble | Stardew `GamePad.SetVibration` connects to KNULLI's H700 motor interface. Binary on/off motor; magnitudes collapse to on/off. |
-| Rumble cleanup | Separate ARM64 helper stops on pipe EOF, termination or 250 ms without a command. Active calls refresh at most every 50 ms. An isolated long request is capped at 250 ms. |
-| External controllers | Existing SDL haptics retained for other player indices. Internal motor is player index 0 by default; configurable. |
-| Memory | Workstation GC, tiered compilation and ReadyToRun enabled; full .NET runtime retained for reflection/mod compatibility. No overclock or global system changes. |
-| Saves | PortMaster persistent save binding to `savedata/`; compatible PC saves can be copied with the game closed. |
-| Mods | Upstream SMAPI 4.5.2 bundle, automatic/forced/disabled modes. Individual mods remain version-, API- and memory-dependent. |
-| Lid/sleep, Wi-Fi, audio, HDMI | KNULLI platform integration retained. Suspend/resume, audio recovery, HDMI and LAN play need physical-device testing. Lid-close does not create a save. |
-| Steam services | Upstream Steam API stubs remain. Steam overlay, achievements, cloud saves and Steam invite multiplayer are unavailable. LAN multiplayer is unverified. |
+| New installation | [Full install ZIP](https://github.com/cdale11/sv-port/releases/download/rg34xxsp-knulli-v0.1.2/stardewvalleymainline.zip) |
+| Existing v0.1.0 or v0.1.1 installation | [Performance upgrade ZIP](https://github.com/cdale11/sv-port/releases/download/rg34xxsp-knulli-v0.1.2/stardewvalley-rg34xxsp-performance-update.zip) |
 
-The importer supports the **.NET 6 mainline layout** (including runtime packs
-6.0.32–6.0.36) and retains upstream's Stardew 1.6 IL patches. It rejects another
-runtime major or an unrecognized game-method layout instead of claiming every
-future update works. Linux/Windows import fixtures pass; no retail game files were
-available for gameplay validation. GOG and the compatibility branch are untested.
+Checksums are available on the release page. GitHub’s **Source code** archives contain the build sources and are not complete install packages. See the [changelog](CHANGELOG.md) for previous releases.
 
-## Configuration and troubleshooting
+## Requirements and compatibility
 
-Edit `stardewvalleymainline/rg34xxsp.conf`:
+- Anbernic RG34XXSP with **64-bit KNULLI** and an installed, updated PortMaster.
+- An owned, complete **Windows or Linux Steam mainline** Stardew Valley installation using the .NET 6 layout. Leave Steam’s legacy `compatibility` beta disabled.
+- Enough SD-card space for the port, copied game files, saves and optional mods.
 
-- `SDV_LAUNCH_MODE=auto`, `vanilla`, or `smapi`.
-- `SDV_RUMBLE=1` enables the built-in bridge; `0` leaves only SDL controller rumble.
-- `SDV_RUMBLE_PLAYER=0` selects the zero-based controller index for the built-in motor.
-- `SDV_PERFORMANCE_OVERLAY=0` filters inherited MangoHud injection; `1` preserves it.
-- `SDV_FORCE_PREPARE=1` bypasses the preparation cache; normally leave it at `0`.
+| Area | Current status |
+| --- | --- |
+| Gameplay and internal rumble | Reported working by the device owner on v0.1.1; the supplied log confirms the motor bridge initializes. |
+| Windows/Linux imports | Import fixtures pass. Exact retail version/source coverage is still incomplete; future game updates may require port changes. |
+| v0.1.2 startup changes | Component tests and package checks pass; device loading-time and FPS comparisons are pending. |
+| SMAPI | Bundled version 4.5.2. Individual mods depend on matching game/API versions, available memory and compatible native libraries. |
+| Audio recovery, lid suspend/resume, HDMI, external controllers and LAN multiplayer | Firmware integration is retained; full hardware validation is pending. Closing the lid does not save the game. |
+| Steam services | Steam overlay, achievements, cloud saves and Steam-invite multiplayer are unavailable through the upstream API stubs. |
 
-The game writes `stardewvalleymainline/log.txt`. Look for
-`RG34XXSP KNULLI rumble ready` when the game initializes vibration support.
-With the game **closed**, run over SSH:
+This remains an **experimental prerelease**. The importer retains upstream’s Stardew 1.6 patches and checks for the .NET 6 runtime layout. The legacy compatibility branch is unsupported; GOG and other devices/firmware are unvalidated. See [validation details](docs/HARDWARE-VALIDATION.md).
+
+## Install
+
+1. Extract the **full install ZIP** into `/userdata/roms/ports/` on KNULLI. Through its network share, this is `roms/ports/`.
+2. Copy the entire clean Windows **or** Linux mainline game installation into `stardewvalleymainline/gamedata/`. Do not mix files from different platforms or versions.
+3. Confirm the resulting layout:
+
+   ```text
+   /userdata/roms/ports/
+   ├── StardewValleyMainline.sh
+   └── stardewvalleymainline/
+       ├── gamedata/
+       │   ├── Stardew Valley.dll
+       │   ├── Stardew Valley.deps.json
+       │   ├── Stardew Valley.runtimeconfig.json
+       │   └── Content/
+       ├── Mods/
+       ├── savedata/
+       └── rg34xxsp.conf
+   ```
+
+4. Refresh KNULLI’s game list and launch `StardewValleyMainline` from **Ports**.
+5. Enable vibration in Stardew’s settings. Leave `Mods/` empty for vanilla play.
+
+The port modifies the **copied** game files during preparation. Keep the original PC installation as your source. The first launch prepares files and creates a cache, so judge repeat-launch speed on the second launch.
+
+## Upgrade
+
+Close the game, back up `savedata/`, `Mods/` and `rg34xxsp.conf`, then extract the **performance upgrade ZIP** into `/userdata/roms/ports/`, allowing replacement.
+
+The upgrade replaces the launcher, preparation helpers, patcher and small patch DLL. It preserves your game files, saves, mods and configuration, and includes the earlier DLL-lock fix. New settings have defaults even if your existing config lacks them.
+
+This fork uses the upstream `stardewvalleymainline` directory. Installing it over another mainline port updates that installation. When changing the game version or switching Windows/Linux sources, replace `gamedata/` with a clean copy while keeping saves and mods separate.
+
+## What this fork adds
+
+- **RG34XXSP rumble:** MonoGame vibration calls reach KNULLI’s H700 motor interface. A separate helper turns the motor off on pipe closure, termination or a 250 ms command timeout. The internal motor is binary on/off; external player indices retain SDL haptics.
+- **Import handling:** Windows/Linux runtime-pack cleanup, removal of conflicting desktop native libraries and managed architecture normalization. Cecil dependency readers now close before overlay replacement, fixing the v0.1.0 locked-DLL abort.
+- **Faster repeat preparation:** metadata checks skip launching the patcher for unchanged dependencies. Game, native-library, patcher, overlay and relevant SMAPI changes trigger preparation again. Failures fall back to the normal path.
+- **Lower preparation overhead:** architecture checks read DLL headers rather than entire assemblies. Unused mods are not normalized in vanilla mode; SMAPI defaults are copied only during preparation.
+- **Device defaults:** 720×480 fallback, PortMaster display dimensions for HDMI, workstation GC, tiered compilation and ReadyToRun. MangoHud injection is optional. No system overclock is applied.
+- **Maintenance:** ARM64 cross builds, regression fixtures, package checksums, startup timings, diagnostics, GitHub checks and downloadable upgrade packages.
+
+The base rendering/audio patches, GL4ES integration, Steam API stubs and original SMAPI packaging come from upstream. See [credits and provenance](docs/CREDITS.md) for ownership and contribution details.
+
+## Controls
+
+The port uses KNULLI/PortMaster’s SDL controller mapping. These are the inherited default actions; physical face-button labels follow your controller configuration.
+
+| Input | Action |
+| --- | --- |
+| Left stick / D-pad | Move or navigate menus |
+| Right stick | Move cursor |
+| A / B | Confirm or interact / cancel or back |
+| X / Y | Use tool / open menu |
+| L1 / R1 | Cycle toolbar row |
+| L2 / R2 | Cycle toolbar item |
+| Start | Pause or open menu |
+| Select | Journal |
+
+## Configuration
+
+Edit `stardewvalleymainline/rg34xxsp.conf` with the game closed.
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `SDV_LAUNCH_MODE` | `auto` | Vanilla with no user mods; SMAPI when user mods are installed. Set `vanilla` or `smapi` to force a mode. |
+| `SDV_RUMBLE` | `1` | Enable the internal motor bridge. `0` leaves SDL controller rumble available. The game’s vibration option also applies. |
+| `SDV_RUMBLE_PLAYER` | `0` | Zero-based controller index routed to the internal motor. |
+| `SDV_PERFORMANCE_OVERLAY` | `0` | Filter inherited MangoHud injection. `1` preserves KNULLI’s overlay injection. |
+| `SDV_FORCE_PREPARE` | `0` | `1` bypasses preparation caching. Reset it to `0` after a forced preparation launch. |
+
+The cache compares file size, modification/change timestamps and inode metadata rather than hashing all DLL contents. If you deliberately replace files while preserving their metadata, force preparation or delete `stardewvalleymainline/.preparation-cache`.
+
+## Saves and mods
+
+- Persistent saves and settings live under `stardewvalleymainline/savedata/`. Back up this folder regularly with the game closed.
+- To transfer a compatible PC save, copy its complete farm folder into `savedata/Saves/`. Match the game version and required mods before loading it.
+- Install user SMAPI mods in `stardewvalleymainline/Mods/`, not `gamedata/Mods/`. Vanilla is the default when no user mods are present.
+- Windows/x64 native dependencies, mismatched SMAPI APIs and large mod packs may prevent a mod from working on this ARM64 device.
+
+## Troubleshooting and performance reports
+
+The main log is `stardewvalleymainline/log.txt`.
+
+| Symptom | First check |
+| --- | --- |
+| Slow startup | Look for `Preparation cache hit` on a repeat launch. Compare `Startup preparation`, total launcher time and game-start/patch-initialization timestamps. |
+| Cache never hits | Check for changed game/mod files, `SDV_FORCE_PREPARE=1`, or the cache-unavailable message. |
+| Missing/incomplete game files | Check the `gamedata/` layout and copy a clean mainline installation. |
+| `MonoGame.Framework.dll` reported in use at `CopyOverlayFiles` | Upgrade from v0.1.0; v0.1.1 and later close Cecil dependency handles before copying. |
+| Rumble absent | Enable the in-game option and `SDV_RUMBLE`; check player index and `RG34XXSP KNULLI rumble ready` in the log. |
+| `glxinfo: command not found` | PortMaster’s KNULLI GL script can fall back to GLES. This line alone is not a startup failure. |
+| A mod fails | Test vanilla, then check its game/SMAPI requirements and dependencies. |
+
+For diagnostics over SSH, with the game **closed**:
 
 ```sh
 cd /userdata/roms/ports/stardewvalleymainline
@@ -99,52 +137,36 @@ bash tools/diagnose-rg34xxsp
 bash tools/diagnose-rg34xxsp --rumble-test
 ```
 
-The second command emits a 150 ms motor pulse. If the interface is missing or
-unwritable, use a KNULLI build with working RG34XXSP rumble support; the port does
-not alter system device permissions. If the pulse works but game rumble does not,
-check the in-game vibration option, player index and launch log.
+The second command produces a 150 ms motor pulse. A missing or unwritable motor interface requires firmware with working RG34XXSP rumble support.
 
-For performance comparisons, create `profiling.enabled` in the port folder to
-use upstream frame/content profiling. Delete it after recording, as logging adds
-work. Start with vanilla and compare the same save/location before adding mods.
-See [hardware validation](docs/HARDWARE-VALIDATION.md) for outstanding checks.
+For deeper profiling, create `profiling.enabled` in the port folder before launching. Logs are written under `logs/`; remove the marker after recording because profiling adds overhead. Compare the same save/location with the same mods and display mode. Hardware speed gains have not been measured by this repository’s automated tests.
 
-## Build and test
+[Open an issue](https://github.com/cdale11/sv-port/issues/new) with the release, KNULLI version, game version and Windows/Linux source, mod list, reproduction steps and relevant log. For loading reports, include first- and second-launch times. Avoid including private save contents unless intentionally sharing them.
 
-Requires Docker and Git. The retail-free build uses host .NET SDK 8 for compilation
-and Debian 11 ARM64 cross tools for native code; the game itself runs on bundled
-**.NET 6.0.36**, not .NET 8. MonoGame is pinned and patched automatically.
+## Build, repository layout and contributing
+
+A retail-free cross build requires Docker and Git:
 
 ```sh
 bash build/scripts/build-rg34xxsp.sh
-# build/out/mainline/release/stardewvalleymainline.zip
 ```
 
-For optional retail smoke tests, use an ARM64 Docker runtime (native or emulated):
+Artifacts are written to `build/out/mainline/release/`. Building uses .NET SDK 8; the game runs on bundled **.NET 6.0.36**. MonoGame is pinned and prepared automatically. See the [build guide](https://github.com/cdale11/sv-port/blob/main/build/README.md) for inputs, tests, optional retail smoke tests and release publishing.
 
-```sh
-SDV_GAME_DIR='/path/to/clean/Steam/game' bash build/scripts/build-mainline.sh
-```
+| Path | Purpose |
+| --- | --- |
+| `portmaster_stardewvalley_mainline/` | Launcher, device config and install template |
+| `build/src/`, `build/rg34xxsp/`, `build/patches/` | Importer, native helpers, managed rumble bridge and MonoGame patch |
+| `build/scripts/`, `build/docker/` | Build and packaging tools |
+| `tests/` | Launcher, rumble, import and package regression checks |
+| `docs/` | Credits, current release notes and validation record |
+| `scripts/` | Profiling comparison and PortMaster tree export |
+| `.github/workflows/` | Automated checks and release packaging |
 
-Run the Windows and Linux copies separately. Each run stages its own copy for
-validation; retail files must never be committed or included in release archives.
-GitHub Actions runs component checks on pushes. Manually run **Port checks** to
-also build and upload the install ZIP as an Actions artifact.
+Read [CONTRIBUTING.md](https://github.com/cdale11/sv-port/blob/main/CONTRIBUTING.md) before submitting changes. The project direction, repository and hardware feedback come from **cdale11**; the device adaptation, fixes, tests and documentation were developed with **OpenAI Codex assistance**. Upstream contributors are credited separately in [CREDITS.md](docs/CREDITS.md).
 
-```sh
-python3 -m unittest discover -s tests -v
-dotnet run --project tests/ImportTests -c Release
-gcc -std=c11 -O2 -Wall -Wextra -Werror build/src/native/rg34xxsp_rumble.c -o /tmp/rg34xxsp-rumble
-dotnet run --project tests/RumbleIntegration -c Release -- /tmp/rg34xxsp-rumble
-```
+## License and acknowledgements
 
-## Provenance
+The port source is [MIT licensed](LICENSE), retaining upstream notices. Bundled runtimes and libraries have their own licenses under `stardewvalleymainline/licenses/`; the packaged .NET runtime also retains its notices. Stardew Valley remains ConcernedApe’s separately licensed game.
 
-- Mainline port: `986097ce2e586abb799c40dfd7386b288fa8ae1b` (history and licenses retained).
-- MonoGame: `3874df98675039d368e77dca50d9a00ac970537e`, plus the checked-in rumble patch and bridge.
-- KNULLI motor contract: [H700 knulli-rumble](https://github.com/knulli-cfw/distribution/blob/ab3a6809286b3cff1648fb8c96a0200bc869beb6/board/batocera/allwinner/h700/fsoverlay/usr/bin/knulli-rumble),
-  `/sys/class/power_supply/axp2202-battery/moto`.
-- .NET 6.0.36, SMAPI 4.5.2, SkiaSharp 2.80.3; licenses packaged alongside the runtime.
-
-Thanks to ConcernedApe, Producdevity, Johnny on Flame, MonoGame, PortMaster and
-KNULLI. Stardew Valley is sold separately; this repository contains no retail game.
+Thanks to **ConcernedApe**, **Producdevity**, **Johnny on Flame**, **MonoGame**, **PortMaster** and **KNULLI**. This fork is a community project and is not an official ConcernedApe or Anbernic release.

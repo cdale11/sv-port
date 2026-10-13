@@ -7,14 +7,15 @@
   ],
   "items_opt": [],
   "attr": {
-    "title": "Stardew Valley \u2014 RG34XXSP (KNULLI)",
+    "title": "Stardew Valley — RG34XXSP (KNULLI)",
     "porter": [
+      "cdale11",
       "Producdevity",
       "Johnny on Flame"
     ],
-    "desc": "Experimental Windows/Linux mainline port for Anbernic RG34XXSP on KNULLI, with built-in motor rumble and optional SMAPI.",
+    "desc": "Stardew Valley mainline adaptation for Anbernic RG34XXSP on KNULLI, with built-in rumble, startup preparation caching and optional SMAPI. Experimental ARM64 release.",
     "desc_md": null,
-    "inst": "Copy a clean Windows or Linux Steam mainline installation into stardewvalleymainline/gamedata. Requires 64-bit KNULLI and PortMaster. Retail gameplay and hardware validation pending. See README.md.",
+    "inst": "Requires an owned Windows or Linux Steam .NET 6 mainline installation, 64-bit KNULLI and PortMaster. Copy the complete game into stardewvalleymainline/gamedata. Use Mods for user SMAPI mods. Gameplay and rumble reported working; full hardware/version coverage remains pending. See the repository README.",
     "inst_md": null,
     "genres": [
       "rpg",

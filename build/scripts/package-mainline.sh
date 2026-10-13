@@ -324,6 +324,7 @@ stage_base_package_root() {
 
   rm -rf "$dest_root"
   cp -R "$ROOT/portmaster_stardewvalley_mainline" "$dest_root"
+  bash "$ROOT/scripts/stage-package-docs.sh" "$dest_root"
 
   rm -rf \
     "$dest_game_dir/dlls" \

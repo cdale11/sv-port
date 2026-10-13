@@ -3,18 +3,18 @@
 [![Port checks](https://github.com/cdale11/sv-port/actions/workflows/checks.yml/badge.svg)](https://github.com/cdale11/sv-port/actions/workflows/checks.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-An ARM64 PortMaster fork of [Producdevity’s Stardew Valley mainline port](https://github.com/Producdevity/portmaster-stardew-valley-mainline), adapted for the **Anbernic RG34XXSP running KNULLI**. It adds built-in motor rumble, Windows/Linux mainline import handling, startup preparation caching and device-specific defaults while retaining optional SMAPI support.
+An ARM64 PortMaster fork of [Producdevity’s Stardew Valley mainline port](https://github.com/Producdevity/portmaster-stardew-valley-mainline), adapted for the **Anbernic RG34XXSP running KNULLI**. It adds built-in motor rumble, Windows/Linux mainline import handling, startup preparation caching, CPU/rendering optimizations and device-specific defaults while retaining optional SMAPI support.
 
 Stardew Valley is sold separately. **No retail game files are included.**
 
 ## Downloads
 
-Current prerelease: **[v0.1.2](https://github.com/cdale11/sv-port/releases/tag/rg34xxsp-knulli-v0.1.2)**.
+Current prerelease: **[v0.1.3](https://github.com/cdale11/sv-port/releases/tag/rg34xxsp-knulli-v0.1.3)**.
 
 | Your installation | Download |
 | --- | --- |
-| New installation | [Full install ZIP](https://github.com/cdale11/sv-port/releases/download/rg34xxsp-knulli-v0.1.2/stardewvalleymainline.zip) |
-| Existing v0.1.0 or v0.1.1 installation | [Performance upgrade ZIP](https://github.com/cdale11/sv-port/releases/download/rg34xxsp-knulli-v0.1.2/stardewvalley-rg34xxsp-performance-update.zip) |
+| New installation | [Full install ZIP](https://github.com/cdale11/sv-port/releases/download/rg34xxsp-knulli-v0.1.3/stardewvalleymainline.zip) |
+| Existing v0.1.0–v0.1.2 installation | [Performance upgrade ZIP](https://github.com/cdale11/sv-port/releases/download/rg34xxsp-knulli-v0.1.3/stardewvalley-rg34xxsp-performance-update.zip) |
 
 Checksums are available on the release page. GitHub’s **Source code** archives contain the build sources and are not complete install packages. See the [changelog](CHANGELOG.md) for previous releases.
 
@@ -28,7 +28,7 @@ Checksums are available on the release page. GitHub’s **Source code** archives
 | --- | --- |
 | Gameplay and internal rumble | Reported working by the device owner on v0.1.1; the supplied log confirms the motor bridge initializes. |
 | Windows/Linux imports | Import fixtures pass. Exact retail version/source coverage is still incomplete; future game updates may require port changes. |
-| v0.1.2 startup changes | Component tests and package checks pass; device loading-time and FPS comparisons are pending. |
+| v0.1.3 startup changes | CPU/HUD fixtures and real .NET 6 SDL/OpenGL rendering/audio tests pass; handheld speed comparisons are pending. |
 | SMAPI | Bundled version 4.5.2. Individual mods depend on matching game/API versions, available memory and compatible native libraries. |
 | Audio recovery, lid suspend/resume, HDMI, external controllers and LAN multiplayer | Firmware integration is retained; full hardware validation is pending. Closing the lid does not save the game. |
 | Steam services | Steam overlay, achievements, cloud saves and Steam-invite multiplayer are unavailable through the upstream API stubs. |
@@ -64,7 +64,7 @@ The port modifies the **copied** game files during preparation. Keep the origina
 
 Close the game, back up `savedata/`, `Mods/` and `rg34xxsp.conf`, then extract the **performance upgrade ZIP** into `/userdata/roms/ports/`, allowing replacement.
 
-The upgrade replaces the launcher, preparation helpers, patcher and small patch DLL. It preserves your game files, saves, mods and configuration, and includes the earlier DLL-lock fix. New settings have defaults even if your existing config lacks them.
+The upgrade replaces the launcher, preparation/CPU helpers, patcher, patch DLL and bundled MonoGame overlay. It preserves your game files, saves, mods and configuration, and includes the earlier DLL-lock fix. New settings have defaults even if your existing config lacks them.
 
 This fork uses the upstream `stardewvalleymainline` directory. Installing it over another mainline port updates that installation. When changing the game version or switching Windows/Linux sources, replace `gamedata/` with a clean copy while keeping saves and mods separate.
 
@@ -74,7 +74,9 @@ This fork uses the upstream `stardewvalleymainline` directory. Installing it ove
 - **Import handling:** Windows/Linux runtime-pack cleanup, removal of conflicting desktop native libraries and managed architecture normalization. Cecil dependency readers now close before overlay replacement, fixing the v0.1.0 locked-DLL abort.
 - **Faster repeat preparation:** metadata checks skip launching the patcher for unchanged dependencies. Game, native-library, patcher, overlay and relevant SMAPI changes trigger preparation again. Failures fall back to the normal path.
 - **Lower preparation overhead:** architecture checks read DLL headers rather than entire assemblies. Unused mods are not normalized in vanilla mode; SMAPI defaults are copied only during preparation.
-- **Device defaults:** 720×480 fallback, PortMaster display dimensions for HDMI, workstation GC, tiered compilation and ReadyToRun. MangoHud injection is optional. No system overclock is applied.
+- **Device defaults:** 720×480 fallback, PortMaster display dimensions for HDMI, workstation GC, tiered compilation and ReadyToRun. KNULLI-selected battery HUD is preserved. No system overclock is applied.
+- **CPU and rendering:** request all online cores, temporarily select the supported performance governor, enable tiered JIT/PGO, remove redundant texture-upload GPU waits and preallocate larger sprite batches. The main game simulation remains single-threaded; see [performance settings and limits](docs/PERFORMANCE.md).
+- **Audio shutdown:** stop audio workers before destroying native resources. This addresses a lifetime race; the reported exit status 139 has not been reproduced on the handheld.
 - **Maintenance:** ARM64 cross builds, regression fixtures, package checksums, startup timings, diagnostics, GitHub checks and downloadable upgrade packages.
 
 The base rendering/audio patches, GL4ES integration, Steam API stubs and original SMAPI packaging come from upstream. See [credits and provenance](docs/CREDITS.md) for ownership and contribution details.
@@ -103,8 +105,16 @@ Edit `stardewvalleymainline/rg34xxsp.conf` with the game closed.
 | `SDV_LAUNCH_MODE` | `auto` | Vanilla with no user mods; SMAPI when user mods are installed. Set `vanilla` or `smapi` to force a mode. |
 | `SDV_RUMBLE` | `1` | Enable the internal motor bridge. `0` leaves SDL controller rumble available. The game’s vibration option also applies. |
 | `SDV_RUMBLE_PLAYER` | `0` | Zero-based controller index routed to the internal motor. |
-| `SDV_PERFORMANCE_OVERLAY` | `0` | Filter inherited MangoHud injection. `1` preserves KNULLI’s overlay injection. |
+| `SDV_HUD` | `auto` | Preserve KNULLI’s selected battery/performance HUD. `on` enables injection; `off` disables it. |
+| `SDV_CPU_AFFINITY` | `all` | Request all online cores; `inherit` retains firmware affinity. |
+| `SDV_CPU_GOVERNOR` | `performance` | Temporarily select the supported governor; `inherit` keeps firmware policy. |
+| `SDV_TIERED_PGO` | `1` | Optimize hot managed code using dynamic profiles. |
+| `SDV_TEXTURE_UPLOAD_SYNC` | `0` | Avoid redundant GPU waits; use `1` to restore them if rendering problems occur. |
+| `SDV_SPRITE_BATCH_CAPACITY` | `2048` | Initial sprite pool; grows normally for larger scenes. |
+| `SDV_STARTUP_DIAGNOSTICS` | `1` | Log managed startup, CPU eligibility and framework stages. |
 | `SDV_FORCE_PREPARE` | `0` | `1` bypasses preparation caching. Reset it to `0` after a forced preparation launch. |
+
+The old `SDV_PERFORMANCE_OVERLAY` setting is superseded and ignored, so an existing value of `0` no longer hides the battery meter. Select the battery HUD in KNULLI and leave `SDV_HUD=auto`. Performance governor mode can use more battery and generate more heat; the launcher restores the original governor on handled exit.
 
 The cache compares file size, modification/change timestamps and inode metadata rather than hashing all DLL contents. If you deliberately replace files while preserving their metadata, force preparation or delete `stardewvalleymainline/.preparation-cache`.
 
@@ -122,6 +132,8 @@ The main log is `stardewvalleymainline/log.txt`.
 | Symptom | First check |
 | --- | --- |
 | Slow startup | Look for `Preparation cache hit` on a repeat launch. Compare `Startup preparation`, total launcher time and game-start/patch-initialization timestamps. |
+| Battery HUD missing | Select the HUD in KNULLI, use `SDV_HUD=auto` and launch through the KNULLI menu. An SSH launch may lack HUD context. |
+| Exit status 139 | Send the final log and explain whether it happened during gameplay or after quitting; it is not treated as a successful exit. |
 | Cache never hits | Check for changed game/mod files, `SDV_FORCE_PREPARE=1`, or the cache-unavailable message. |
 | Missing/incomplete game files | Check the `gamedata/` layout and copy a clean mainline installation. |
 | `MonoGame.Framework.dll` reported in use at `CopyOverlayFiles` | Upgrade from v0.1.0; v0.1.1 and later close Cecil dependency handles before copying. |

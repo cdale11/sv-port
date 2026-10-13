@@ -11,7 +11,7 @@ with zipfile.ZipFile(sys.argv[1]) as package:
                  'docs/CREDITS.md', 'docs/HARDWARE-VALIDATION.md', 'docs/RELEASE-NOTES.md',
                  'BUILD-STATUS.txt', 'SHA256SUMS'] + [base + p for p in [
         'libs.aarch64/rg34xxsp-rumble', 'tools/rg34xxsp-profile',
-        'tools/diagnose-rg34xxsp', 'tools/preparation-cache', 'dotnet/dotnet',
+        'tools/diagnose-rg34xxsp', 'tools/preparation-cache', 'tools/cpu-performance', 'dotnet/dotnet',
         'overrides/gamedata/MonoGame.Framework.dll',
         'tools/MainlineGameDataPatcher/MainlineGameDataPatcher.runtimeconfig.json',
         'tools/SMAPIBundle/game-root/StardewModdingAPI.dll']]:
@@ -27,6 +27,7 @@ with zipfile.ZipFile(sys.argv[1]) as package:
         assert hashlib.sha256(package.read(name.removeprefix('./'))).hexdigest() == digest, name
     framework = package.read(base + 'overrides/gamedata/MonoGame.Framework.dll')
     assert b'PortMasterRumble' in framework, 'Missing MonoGame rumble integration'
+    assert b'PortMasterRuntime' in framework, 'Missing framework performance controls'
     for name in ['StardewValleyMainline.sh', base + 'dotnet/dotnet', base + 'libs.aarch64/rg34xxsp-rumble']:
         assert package.getinfo(name).external_attr >> 16 & 0o111, f'Not executable: {name}'
     print(f'PASS: {len(names)} archive entries; payload checksums, ARM64 ELF, rumble patch, executable modes, no retail files')

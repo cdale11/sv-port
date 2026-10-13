@@ -2,10 +2,15 @@
 
 ## User-reported device result
 
-A user confirmed gameplay and built-in rumble working on an RG34XXSP running
-KNULLI with v0.1.1. The supplied log confirms the bridge initializes. Exact game
-version/source, sustained frame rate and suspend/resume were not supplied.
-The v0.1.2 optimization changes still need device comparisons.
+The device owner reports gameplay and built-in rumble working on RG34XXSP with
+**KNULLI Scarab**, recent Windows mainline game files and no mods. Exact game
+version was not supplied. A v0.1.2 repeat-launch log shows preparation cached in
+0 seconds, then about 34 seconds before patch initialization. Exit status 139 was
+logged, but the user reports no in-game crash. Battery HUD was missing.
+
+v0.1.3 addresses HUD filtering, CPU/runtime/rendering overhead and an audio
+shutdown race. Its handheld loading times, large-farm frame rates, HUD restoration
+and exit behavior still need verification.
 
 ## Completed in the build environment
 
@@ -18,7 +23,9 @@ The v0.1.2 optimization changes still need device comparisons.
 - Managed-to-native integration covers player routing, both vibration channels, stop, timeout and close.
 - Cache regression tests cover unchanged launches, game/native/overlay/patcher changes, SMAPI changes, failure fallback and forced preparation.
 - Architecture scans allocate about 4.5 KB for a synthetic 64 MiB DLL. This measures allocation, not device loading time.
-- MangoHud filtering preserves other preloads and supports opt-in.
+- HUD auto mode retains KNULLI battery configuration and non-HUD preloads; explicit off mode filters MangoHud.
+- CPU policy fixtures check all-core eligibility, fallbacks, governor restoration and later firmware changes.
+- .NET 6.0.36 SDL/OpenGL tests pass with both upload synchronization modes: full/partial texture ordering, 8192 sprites, pool growth and stopped audio workers after disposal.
 - Package checked for expected payloads and absence of retail game files.
 
 These automated checks do not establish hardware frame rate or loading-time gains.

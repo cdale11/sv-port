@@ -30,10 +30,14 @@ namespace Microsoft.Xna.Framework.Input
                     if (string.IsNullOrEmpty(path)) return false;
                     try
                     {
-                        helper = Process.Start(new ProcessStartInfo(path) {
+                        var info = new ProcessStartInfo(path) {
                             UseShellExecute = false, RedirectStandardInput = true,
                             RedirectStandardOutput = true, CreateNoWindow = true
-                        });
+                        };
+                        info.EnvironmentVariables["LD_PRELOAD"] = Environment.GetEnvironmentVariable("SDV_NONHUD_PRELOAD") ?? "";
+                        info.EnvironmentVariables["MANGOHUD"] = "0";
+                        info.EnvironmentVariables["DISABLE_MANGOHUD"] = "1";
+                        helper = Process.Start(info);
                         if (helper.StandardOutput.ReadLine() != "READY") { Close(); return false; }
                         AppDomain.CurrentDomain.ProcessExit += (sender, args) => Close();
                         Console.WriteLine("RG34XXSP KNULLI rumble ready (player " + selected + ").");

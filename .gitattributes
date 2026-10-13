@@ -7,3 +7,6 @@
 *.so binary
 *.zip binary
 *.squashfs binary
+
+# Framework diffs must retain mixed upstream line endings.
+*.patch -text

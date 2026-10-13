@@ -3,6 +3,22 @@
 All releases remain experimental. Loading-time and FPS improvements are not yet
 measured on the handheld. See [hardware validation](docs/HARDWARE-VALIDATION.md).
 
+## v0.1.3 — CPU, rendering and battery HUD
+
+[Release and downloads](https://github.com/cdale11/sv-port/releases/tag/rg34xxsp-knulli-v0.1.3)
+
+- Request all online CPU cores and temporarily select the supported performance
+  governor, restoring its previous value on handled exit.
+- Enable dynamic PGO and quick tiered JIT, align imported runtime configuration
+  and remove inherited artificial processor-count caps.
+- Preserve KNULLI's selected battery HUD by default; supersede the old overlay switch.
+- Avoid redundant GPU-wide texture upload waits and preallocate larger sprite pools.
+- Correct embedded built-in shader names in the SDK framework build.
+- Join audio workers before native teardown; the handheld exit-139 cause remains unconfirmed.
+- Add early startup/framework-stage diagnostics and real .NET 6 graphics/audio tests.
+- Include the updated MonoGame overlay in the non-destructive upgrade package.
+- Consolidate the README, credits, contribution/build guides and package documentation.
+
 ## v0.1.2 — startup and overlay optimizations
 
 [Release and downloads](https://github.com/cdale11/sv-port/releases/tag/rg34xxsp-knulli-v0.1.2)
@@ -37,11 +53,3 @@ measured on the handheld. See [hardware validation](docs/HARDWARE-VALIDATION.md)
 - Implement Windows/Linux .NET 6 mainline import handling and device defaults.
 - Retain optional upstream SMAPI, controller mapping and persistent saves.
 - Add ARM64 cross builds, component checks, diagnostics and checksummed packages.
-
-## Unreleased — repository maintenance
-
-- Consolidate installation, controls, configuration and troubleshooting in the
-  README; document fork contributions and upstream provenance.
-- Refresh contribution/build guides, add release history and public repository
-  metadata, and copy canonical documentation during package staging.
-- Ignore local retail files, saves, mods and runtime logs in the install template.

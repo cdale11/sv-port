@@ -11,12 +11,14 @@ if [ "$(git -C "$MONOGAME_DIR" rev-parse HEAD)" != "$revision" ]; then
   echo "Expected MonoGame $revision. Use a separate checkout at MONOGAME_DIR." >&2
   exit 1
 fi
-patch="$ROOT/build/patches/monogame-rg34xxsp.patch"
+for patch in "$ROOT/build/patches/monogame-rg34xxsp.patch" "$ROOT/build/patches/monogame-performance.patch"; do
 if git -C "$MONOGAME_DIR" apply --check "$patch" 2>/dev/null; then
   git -C "$MONOGAME_DIR" apply "$patch"
 elif ! git -C "$MONOGAME_DIR" apply --reverse --check "$patch" 2>/dev/null; then
   echo "MonoGame contains conflicting local changes; refusing to overwrite them." >&2
   exit 1
 fi
+done
 # SDK projects include root .cs files automatically.
 cp "$ROOT/build/rg34xxsp/PortMasterRumble.cs" "$MONOGAME_DIR/MonoGame.Framework/PortMasterRumble.cs"
+cp "$ROOT/build/rg34xxsp/PortMasterRuntime.cs" "$MONOGAME_DIR/MonoGame.Framework/PortMasterRuntime.cs"

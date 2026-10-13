@@ -9,7 +9,7 @@ that executes the game.
 | Input | Version or location |
 | --- | --- |
 | Mainline port base | `986097ce2e586abb799c40dfd7386b288fa8ae1b` |
-| MonoGame | `3874df98675039d368e77dca50d9a00ac970537e` on `Producdevity/MonoGame`, plus the checked-in rumble patch/bridge |
+| MonoGame | `3874df98675039d368e77dca50d9a00ac970537e` on `Producdevity/MonoGame`, plus the checked-in rumble and performance patches/bridges |
 | .NET game runtime | 6.0.36, Linux ARM64 |
 | SMAPI | 4.5.2 |
 | SkiaSharp native assets | 2.80.3 |
@@ -38,7 +38,7 @@ Artifacts appear under `build/out/mainline/release/`:
 
 - `stardewvalleymainline.zip`: complete install package, without retail game files.
 - `stardewvalley-rg34xxsp-performance-update.zip`: launcher/helpers/patcher/patch
-  DLL only; preserves the existing game files, saves, mods and config.
+  DLL and MonoGame overlay; preserves the existing game files, saves, mods and config.
 - `.sha256` files and the full ZIP’s `.contents.txt` listing.
 
 The full package contains `BUILD-STATUS.txt` and per-file `SHA256SUMS`. This build
@@ -59,10 +59,12 @@ python3 tests/check_package.py build/out/mainline/release/stardewvalleymainline.
 ```
 
 Coverage includes launcher lifecycle, cache invalidation/fallback, overlay
-filtering, Windows/Linux runtime fixtures, DLL dependency-handle cleanup,
+preservation/disable modes, reversible CPU governor and affinity policy, Windows/Linux runtime fixtures, DLL dependency-handle cleanup,
 header-only architecture scans, motor watchdog behavior and managed/native rumble
 routing. Package checks verify expected files, checksums, ARM64 native binaries,
 executable permissions and exclusion of retail data.
+
+The packaging build also runs an actual .NET 6.0.36 SDL/OpenGL fixture under Xvfb/software Mesa, with both texture synchronization modes. It checks full/partial upload order, an 8192-sprite draw/readback, pool growth and audio-worker shutdown. This validates framework behavior on the build host, not the handheld GPU or retail farms.
 
 ## Optional retail smoke tests
 

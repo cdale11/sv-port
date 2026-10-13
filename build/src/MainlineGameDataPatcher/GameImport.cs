@@ -90,6 +90,9 @@ internal static class GameImport
         var properties = options["configProperties"] as JsonObject;
         if (properties is null) { properties = new JsonObject(); options["configProperties"] = properties; }
         properties["System.GC.Server"] = false;
+        properties["System.Runtime.TieredCompilation"] = Environment.GetEnvironmentVariable("SDV_TIERED_COMPILATION") != "0";
+        properties["System.Runtime.TieredCompilation.QuickJit"] = true;
+        properties["System.Runtime.TieredCompilation.QuickJitForLoops"] = Environment.GetEnvironmentVariable("SDV_QUICKJIT_LOOPS") != "0";
         Write(runtimePath, root);
     }
 

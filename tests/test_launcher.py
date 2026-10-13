@@ -44,11 +44,13 @@ case "$1" in
 esac
 '''); stub.chmod(0o755)
             binaries = root / 'bin'; binaries.mkdir()
+            cpus = root / 'cpu'; cpus.mkdir()
+            (cpus / 'online').write_text('0-3\n')
             for name, body in [('uname', 'echo aarch64'), ('sleep', 'exit 0')]:
                 path = binaries / name; path.write_text('#!/bin/sh\n' + body + '\n'); path.chmod(0o755)
             record = root / 'record'
             env = dict(os.environ, XDG_DATA_HOME=str(root / 'data'), SDV_GAMEDIR=str(game),
-                       SDV_TEST_RECORD=str(record), PATH=str(binaries) + ':' + os.environ['PATH'])
+                       SDV_TEST_RECORD=str(record), SDV_CPU_SYSFS_ROOT=str(cpus), PATH=str(binaries) + ':' + os.environ['PATH'])
             for run in range(runs):
                 if before_run: before_run(game, run, env)
                 result = subprocess.run(['bash', str(ROOT / 'portmaster_stardewvalley_mainline/StardewValleyMainline.sh')],
@@ -132,6 +134,25 @@ esac
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(record.splitlines().count('patch'), 2)
 
+    def test_jit_setting_change_invalidates_preparation(self):
+        def change(game, run, env): env['SDV_QUICKJIT_LOOPS'] = str(run)
+        result, record = self.run_launcher(runs=2, before_run=change)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(record.splitlines().count('patch'), 2)
+
+    def test_governor_restored_after_game_failure(self):
+        def change(game, run, env):
+            policy = game.parent / 'cpu/cpufreq/policy0'
+            if run == 0:
+                policy.mkdir(parents=True)
+                (policy / 'scaling_available_governors').write_text('performance schedutil\n')
+                (policy / 'scaling_governor').write_text('schedutil\n')
+            else:
+                self.assertEqual((policy / 'scaling_governor').read_text(), 'schedutil\n')
+        result, record = self.run_launcher(game_exit=42, runs=2, before_run=change)
+        self.assertEqual(result.returncode, 42)
+        self.assertEqual(record.splitlines().count('cleanup'), 2)
+
     def test_failure_is_not_cached(self):
         result, record = self.run_launcher(patch_exit=2, runs=2)
         self.assertEqual(result.returncode, 1)
@@ -148,6 +169,7 @@ esac
         profile = ROOT / 'portmaster_stardewvalley_mainline/stardewvalleymainline/tools/rg34xxsp-profile'
         result = subprocess.run(['bash', '-c', '''
 SDV_RUMBLE=0
+SDV_HUD=off
 LD_PRELOAD=/usr/lib/libMangoHud.so:/usr/lib/libinterpose.so
 source "$1"
 printf 'preload=%s overlay=%s\n' "$LD_PRELOAD" "$MANGOHUD"
@@ -158,7 +180,7 @@ printf 'preload=%s overlay=%s\n' "$LD_PRELOAD" "$MANGOHUD"
         profile = ROOT / 'portmaster_stardewvalley_mainline/stardewvalleymainline/tools/rg34xxsp-profile'
         result = subprocess.run(['bash', '-c', '''
 SDV_RUMBLE=0
-SDV_PERFORMANCE_OVERLAY=1
+SDV_HUD=on
 LD_PRELOAD=/usr/lib/libMangoHud.so:/usr/lib/libinterpose.so
 source "$1"
 printf 'preload=%s\n' "$LD_PRELOAD"

@@ -11,7 +11,7 @@
   mainline-port support, as credited by upstream.
 - **MonoGame** provides the framework. This fork builds
   [Producdevity/MonoGame](https://github.com/Producdevity/MonoGame/tree/portmaster-stardew-mainline)
-  at `3874df98675039d368e77dca50d9a00ac970537e`, plus this repository’s rumble patch.
+  at `3874df98675039d368e77dca50d9a00ac970537e`, plus this repository’s rumble and performance patches.
 - **PortMaster** provides controls, platform integration and the port ecosystem.
 - **KNULLI** provides the target firmware. The H700 motor contract comes from
   [knulli-rumble](https://github.com/knulli-cfw/distribution/blob/ab3a6809286b3cff1648fb8c96a0200bc869beb6/board/batocera/allwinner/h700/fsoverlay/usr/bin/knulli-rumble):
@@ -30,6 +30,7 @@ device logs and confirmed gameplay and rumble on v0.1.1.
 - Cecil dependency-handle ownership to fix the startup DLL-lock failure.
 - Preparation caching, header-only architecture checks, scoped MangoHud filtering
   and startup timing logs.
+- KNULLI HUD preservation, reversible CPU policy, runtime/JIT settings, texture upload and sprite pool optimizations, shader resource naming and audio-worker shutdown.
 - Cross-build scripts, regression fixtures, CI, package verification, releases,
   upgrade ZIPs, troubleshooting and documentation cleanup.
 

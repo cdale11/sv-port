@@ -1,0 +1,229 @@
+diff --git a/MonoGame.Framework/FrameworkDispatcher.cs b/MonoGame.Framework/FrameworkDispatcher.cs
+index 17c798b..3528ffc 100644
+--- a/MonoGame.Framework/FrameworkDispatcher.cs
++++ b/MonoGame.Framework/FrameworkDispatcher.cs
+@@ -20,6 +20,7 @@ namespace Microsoft.Xna.Framework
+         private static bool _initialized = false;
+         internal static readonly object UpdateSyncRoot = new object();
+         private static Thread _updateWorkerThread;
++        private static volatile bool _stopWorker;
+ 
+         /// <summary>
+         /// Processes framework events.
+@@ -32,10 +33,13 @@ namespace Microsoft.Xna.Framework
+ 
+         private static void UpdateWork()
+         {
+-            while (true)
++            while (!_stopWorker)
+             {
+                 lock (UpdateSyncRoot)
++                {
++                    if (_stopWorker) break;
+                     DoUpdate();
++                }
+ 
+                 Thread.Sleep(16);
+             }
+@@ -48,8 +52,18 @@ namespace Microsoft.Xna.Framework
+             Microphone.UpdateMicrophones();
+         }
+ 
++        internal static void Shutdown()
++        {
++            _stopWorker = true;
++            var worker = _updateWorkerThread;
++            if (worker != null && worker != Thread.CurrentThread) worker.Join();
++            _updateWorkerThread = null;
++            _initialized = false;
++        }
++
+         private static void Initialize()
+         {
++            _stopWorker = false;
+             SoundEffect.Initialize();
+             _updateWorkerThread = new Thread(UpdateWork);
+             _updateWorkerThread.IsBackground = true;
+diff --git a/MonoGame.Framework/Game.cs b/MonoGame.Framework/Game.cs
+index fca129a..d333b41 100644
+--- a/MonoGame.Framework/Game.cs
++++ b/MonoGame.Framework/Game.cs
+@@ -69,6 +69,7 @@ namespace Microsoft.Xna.Framework
+         /// </summary>
+         public Game()
+         {
++            PortMasterRuntime.Stage("game.constructor.enter");
+             _instance = this;
+ 
+             LaunchParameters = new LaunchParameters();
+@@ -76,13 +77,17 @@ namespace Microsoft.Xna.Framework
+             _components = new GameComponentCollection();
+             _content = new ContentManager(_services);
+ 
++            PortMasterRuntime.Stage("platform.create.begin");
+             Platform = GamePlatform.PlatformCreate(this);
++            PortMasterRuntime.Stage("platform.create.complete");
+             Platform.Activated += OnActivated;
+             Platform.Deactivated += OnDeactivated;
+             _services.AddService(typeof(GamePlatform), Platform);
+ 
+             // Calling Update() for first time initializes some systems
++            PortMasterRuntime.Stage("audio.initialize.begin");
+             FrameworkDispatcher.Update();
++            PortMasterRuntime.Stage("audio.initialize.complete");
+ 
+             // Allow some optional per-platform construction to occur too.
+             PlatformConstruct();
+@@ -116,6 +121,10 @@ namespace Microsoft.Xna.Framework
+             {
+                 if (disposing)
+                 {
++                    // Stop native audio callbacks before unloading their resources.
++                    PortMasterRuntime.Stage("audio.callbacks.stop.begin");
++                    FrameworkDispatcher.Shutdown();
++                    PortMasterRuntime.Stage("audio.callbacks.stop.complete");
+                     // Dispose loaded game components
+                     for (int i = 0; i < _components.Count; i++)
+                     {
+@@ -150,7 +159,10 @@ namespace Microsoft.Xna.Framework
+                     ContentTypeReaderManager.ClearTypeCreators();
+ 
+                     if (SoundEffect._systemState == SoundEffect.SoundSystemState.Initialized)
++                    {
+                         SoundEffect.PlatformShutdown();
++                        PortMasterRuntime.Stage("audio.dispose.complete");
++                    }
+                 }
+ #if ANDROID
+                 Activity = null;
+@@ -903,6 +915,7 @@ namespace Microsoft.Xna.Framework
+                 Console.WriteLine("Failed to load Patch {0}", ex.Message);
+             }
+ 
++            PortMasterRuntime.Stage("game.initialize.begin");
+             AssertNotDisposed();
+             if (GraphicsDevice == null && graphicsDeviceManager != null)
+                 _graphicsDeviceManager.CreateDevice();
+@@ -918,6 +931,7 @@ namespace Microsoft.Xna.Framework
+             CategorizeComponents();
+             _components.ComponentAdded += Components_ComponentAdded;
+             _components.ComponentRemoved += Components_ComponentRemoved;
++            PortMasterRuntime.Stage("game.initialize.complete");
+         }
+ 
+ 		internal void DoExiting()
+diff --git a/MonoGame.Framework/Graphics/SpriteBatcher.cs b/MonoGame.Framework/Graphics/SpriteBatcher.cs
+index abdc64f..3e821a3 100644
+--- a/MonoGame.Framework/Graphics/SpriteBatcher.cs
++++ b/MonoGame.Framework/Graphics/SpriteBatcher.cs
+@@ -59,7 +59,7 @@ namespace Microsoft.Xna.Framework.Graphics
+             _device = device;
+ 
+             if (capacity <= 0)
+-                capacity = InitialBatchSize;
++                capacity = PortMasterRuntime.SpriteBatchCapacity;
+             else
+                 capacity = (capacity + 63) & (~63); // ensure chunks of 64.
+ 
+diff --git a/MonoGame.Framework/MonoGame.Framework.DesktopGL.csproj b/MonoGame.Framework/MonoGame.Framework.DesktopGL.csproj
+index 6c373e9..ee08182 100644
+--- a/MonoGame.Framework/MonoGame.Framework.DesktopGL.csproj
++++ b/MonoGame.Framework/MonoGame.Framework.DesktopGL.csproj
+@@ -139,4 +139,10 @@
+ 
+   <Import Project="Platform\OpenGL.targets" />
+   <Import Project="Platform\OpenAL.targets" />
++  <ItemGroup>
++    <EmbeddedResource Update="Platform\Graphics\Effect\Resources\*.ogl.mgfxo">
++      <LogicalName>Microsoft.Xna.Framework.Platform.Graphics.Effect.Resources.%(Filename)%(Extension)</LogicalName>
++      <WithCulture>false</WithCulture>
++    </EmbeddedResource>
++  </ItemGroup>
+ </Project>
+diff --git a/MonoGame.Framework/Platform/Audio/OggStream.cs b/MonoGame.Framework/Platform/Audio/OggStream.cs
+index 11c3dd5..b5bd4d7 100644
+--- a/MonoGame.Framework/Platform/Audio/OggStream.cs
++++ b/MonoGame.Framework/Platform/Audio/OggStream.cs
+@@ -407,13 +407,16 @@ namespace Microsoft.Xna.Framework.Audio
+         {
+             lock (singletonMutex)
+             {
+-                Debug.Assert(Instance == this, "Two instances running, somehow...?");
+-
++                if (cancelled) return;
+                 cancelled = true;
+-                lock (iterationMutex)
+-                    streams.Clear();
+-
+-                Instance = null;
++                lock (iterationMutex) streams.Clear();
++            }
++            // A worker can still be inside an AL call after checking the stream
++            // set. It must finish before the controller destroys its context.
++            if (underlyingThread != Thread.CurrentThread) underlyingThread.Join();
++            lock (singletonMutex)
++            {
++                if (instance == this) Instance = null;
+             }
+         }
+ 
+diff --git a/MonoGame.Framework/Platform/Graphics/Texture2D.OpenGL.cs b/MonoGame.Framework/Platform/Graphics/Texture2D.OpenGL.cs
+index 8a53ffe..3befca0 100644
+--- a/MonoGame.Framework/Platform/Graphics/Texture2D.OpenGL.cs
++++ b/MonoGame.Framework/Platform/Graphics/Texture2D.OpenGL.cs
+@@ -120,7 +120,9 @@ namespace Microsoft.Xna.Framework.Graphics
+ #if !ANDROID
+                     // Required to make sure that any texture uploads on a thread are completed
+                     // before the main thread tries to use the texture.
+-                    GL.Finish();
++                    // Upload callbacks execute on the same UI GL context.
++                    // Command ordering makes a whole-GPU finish unnecessary.
++                    if (PortMasterRuntime.TextureUploadSync) GL.Finish();
+                     GraphicsExtensions.CheckGLError();
+ #endif
+                     // Restore the bound texture.
+@@ -175,7 +177,9 @@ namespace Microsoft.Xna.Framework.Graphics
+ #if !ANDROID
+                     // Required to make sure that any texture uploads on a thread are completed
+                     // before the main thread tries to use the texture.
+-                    GL.Finish();
++                    // Upload callbacks execute on the same UI GL context.
++                    // Command ordering makes a whole-GPU finish unnecessary.
++                    if (PortMasterRuntime.TextureUploadSync) GL.Finish();
+                     GraphicsExtensions.CheckGLError();
+ #endif
+                     // Restore the bound texture.
+diff --git a/MonoGame.Framework/Platform/SDL/SDLGamePlatform.cs b/MonoGame.Framework/Platform/SDL/SDLGamePlatform.cs
+index 5558550..257f650 100644
+--- a/MonoGame.Framework/Platform/SDL/SDLGamePlatform.cs
++++ b/MonoGame.Framework/Platform/SDL/SDLGamePlatform.cs
+@@ -49,6 +49,7 @@ namespace Microsoft.Xna.Framework
+             if (version >= 205 && CurrentPlatform.OS == OS.Windows && Debugger.IsAttached)
+                 Sdl.SetHint("SDL_WINDOWS_DISABLE_THREAD_NAMING", "1");
+ 
++            PortMasterRuntime.Stage("sdl.initialize.begin");
+             Sdl.Init((int)(
+                 Sdl.InitFlags.Video |
+                 Sdl.InitFlags.Joystick |
+@@ -56,6 +57,7 @@ namespace Microsoft.Xna.Framework
+                 Sdl.InitFlags.Haptic
+             ));
+ 
++            PortMasterRuntime.Stage("sdl.initialize.complete");
+             Sdl.DisableScreenSaver();
+ 
+             GamePad.InitDatabase();
+@@ -85,11 +87,13 @@ namespace Microsoft.Xna.Framework
+         public override void RunLoop()
+         {
+             Sdl.Window.Show(Window.Handle);
++            bool firstTick = true;
+ 
+             while (true)
+             {
+                 SdlRunLoop();
+                 Game.Tick();
++                if (firstTick) { PortMasterRuntime.Stage("first.tick.complete"); firstTick = false; }
+                 Threading.Run();
+                 GraphicsDevice.DisposeContexts();
+ 

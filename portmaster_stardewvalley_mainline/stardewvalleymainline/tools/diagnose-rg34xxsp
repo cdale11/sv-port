@@ -11,6 +11,19 @@ echo "Controllers:"
 for path in /sys/class/input/event*/device/name; do [ ! -r "$path" ] || printf '%s: %s\n' "$path" "$(cat "$path")"; done
 echo "Memory:"
 free -m
+echo "CPU policy:"
+taskset -pc $$ 2>/dev/null || true
+cat /sys/devices/system/cpu/online 2>/dev/null || true
+for path in /sys/devices/system/cpu/cpufreq/policy*; do
+  [ ! -d "$path" ] || {
+    printf '%s governor=%s current_khz=%s max_khz=%s\n' "$path" \
+      "$(cat "$path/scaling_governor" 2>/dev/null)" \
+      "$(cat "$path/scaling_cur_freq" 2>/dev/null)" \
+      "$(cat "$path/scaling_max_freq" 2>/dev/null)"
+  }
+done
+echo "KNULLI HUD context:"
+printf 'MANGOHUD=%s config=%s\n' "${MANGOHUD:-unset}" "${MANGOHUD_CONFIGFILE:-unset}"
 echo "Bundled runtime:"
 "$gamedir/dotnet/dotnet" --list-runtimes
 echo "Native helper:"

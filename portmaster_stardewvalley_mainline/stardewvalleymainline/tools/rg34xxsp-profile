@@ -4,31 +4,39 @@ export DISPLAY_WIDTH="${DISPLAY_WIDTH:-720}"
 export DISPLAY_HEIGHT="${DISPLAY_HEIGHT:-480}"
 # Workstation GC avoids a server heap per core on the 2 GB H700 handheld.
 export DOTNET_gcServer=0
-export DOTNET_TieredCompilation=1
+export SDV_TIERED_COMPILATION="${SDV_TIERED_COMPILATION:-1}"
+export SDV_QUICKJIT_LOOPS="${SDV_QUICKJIT_LOOPS:-1}"
+export DOTNET_TieredCompilation="$SDV_TIERED_COMPILATION"
+export DOTNET_TieredPGO="${SDV_TIERED_PGO:-1}"
+export DOTNET_TC_QuickJit=1
+export DOTNET_TC_QuickJitForLoops="${SDV_QUICKJIT_LOOPS:-1}"
+export SDV_TEXTURE_UPLOAD_SYNC="${SDV_TEXTURE_UPLOAD_SYNC:-0}"
+export SDV_SPRITE_BATCH_CAPACITY="${SDV_SPRITE_BATCH_CAPACITY:-2048}"
+export SDV_STARTUP_DIAGNOSTICS="${SDV_STARTUP_DIAGNOSTICS:-1}"
 export DOTNET_ReadyToRun=1
 export DOTNET_ROLL_FORWARD=LatestPatch
 export DOTNET_MULTILEVEL_LOOKUP=0
-# KNULLI may inject MangoHud globally. Avoid its game/helper hooks by default,
-# while preserving every other preload (including input/platform integrations).
-if [ "${SDV_PERFORMANCE_OVERLAY:-0}" != 1 ]; then
-  preload_keep=()
-  read -r -a preload_items <<< "${LD_PRELOAD//:/ }"
-  for preload_item in "${preload_items[@]}"; do
-    case "${preload_item,,}" in *mangohud*) ;; *) preload_keep+=("$preload_item") ;; esac
-  done
-  if [ "${#preload_keep[@]}" -gt 0 ]; then
-    preload_joined=
-    for preload_item in "${preload_keep[@]}"; do
-      preload_joined="${preload_joined}${preload_joined:+:}$preload_item"
-    done
-    export LD_PRELOAD="$preload_joined"
-  else
-    unset LD_PRELOAD
-  fi
+# Respect KNULLI's selected HUD (including battery-only displays). SDV_HUD is
+# the new control; the v0.1.2 overlay flag is superseded to restore CFW defaults.
+preload_keep=()
+read -r -a preload_items <<< "${LD_PRELOAD//:/ }"
+for preload_item in "${preload_items[@]}"; do
+  case "${preload_item,,}" in *mangohud*) ;; *) preload_keep+=("$preload_item") ;; esac
+done
+preload_joined=
+for preload_item in "${preload_keep[@]}"; do
+  preload_joined="${preload_joined}${preload_joined:+:}$preload_item"
+done
+export SDV_NONHUD_PRELOAD="$preload_joined"
+if [ "${SDV_HUD:-auto}" = off ]; then
+  if [ -n "$preload_joined" ]; then export LD_PRELOAD="$preload_joined"; else unset LD_PRELOAD; fi
   export MANGOHUD=0
   export DISABLE_MANGOHUD=1
 else
   unset DISABLE_MANGOHUD
+  if [ "${SDV_HUD:-auto}" = on ] || [ -n "${MANGOHUD_CONFIGFILE:-}" ] || [[ "${LD_PRELOAD,,}" = *mangohud* ]]; then
+    export MANGOHUD=1
+  fi
 fi
 unset preload_keep preload_items preload_item preload_joined
 export SDV_RUMBLE_DEVICE="${SDV_RUMBLE_DEVICE:-/sys/class/power_supply/axp2202-battery/moto}"

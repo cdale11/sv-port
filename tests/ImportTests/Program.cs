@@ -33,6 +33,9 @@ try
         GameImport.ValidateMainline(config, deps);
         GameImport.PruneRuntimePackManagedFiles(deps, dir);
         GameImport.PatchDeps(deps); GameImport.PatchRuntimeConfig(config);
+        var properties = JsonNode.Parse(File.ReadAllText(config))!["runtimeOptions"]!["configProperties"]!;
+        Check(properties["System.Runtime.TieredCompilation"]!.GetValue<bool>(), "tiered compilation not applied");
+        Check(properties["System.Runtime.TieredCompilation.QuickJitForLoops"]!.GetValue<bool>(), "quick loop JIT not applied");
         Check(!File.Exists(Path.Combine(dir, "System.Private.CoreLib.dll")), "stale runtime");
         Check(File.Exists(Path.Combine(dir, "GameLibrary.dll")), "game library deleted");
         Check(!File.ReadAllText(deps).Contains("runtimepack."), "runtimepack still referenced");

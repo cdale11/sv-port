@@ -4,7 +4,7 @@
 sdv_preparation_fingerprint() (
   set -o pipefail
   {
-    printf 'rg34xxsp-preparation-v1:%s\n' "$launch_mode"
+    printf 'rg34xxsp-preparation-v2:%s:tiered=%s:loops=%s\n' "$launch_mode" "${SDV_TIERED_COMPILATION:-1}" "${SDV_QUICKJIT_LOOPS:-1}"
     {
       find "$gamedir/gamedata" -path "$gamedir/gamedata/Content" -prune -o \
         -type f \( -iname '*.dll' -o -iname '*.exe' -o -iname '*.json' \

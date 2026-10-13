@@ -1,16 +1,17 @@
-**v0.1.2 reduces repeat-launch preparation work and removes optional overlay hooks by default.**
+**v0.1.3 adds CPU/rendering optimizations and restores KNULLI's selected battery HUD.**
 
-- A metadata cache skips starting the .NET patcher when game dependencies, patcher/overlay inputs and SMAPI mode are unchanged. Changes automatically trigger preparation; errors fall back to the normal path.
-- SMAPI default mods are copied only during preparation. Unused mods are not normalized in vanilla mode.
-- DLL architecture checks read PE/CLI headers rather than loading whole files. The synthetic 64 MiB fixture allocates approximately 4.5 KB for this check.
-- Inherited MangoHud preload entries are filtered by default. Other preload libraries and the rumble bridge are preserved. `SDV_PERFORMANCE_OVERLAY=1` retains the overlay.
-- Startup logs now separate preparation, launcher time and game initialization. `SDV_FORCE_PREPARE=1` forces a preparation pass.
-- Includes the v0.1.1 Cecil dependency-handle fix.
+- Request all online cores and temporarily use the supported performance governor; restore the previous governor on handled exit. No overclock is applied. Main simulation/rendering remains single-threaded.
+- Enable tiered JIT, quick loop compilation and dynamic PGO; remove artificial processor-count caps and align imported runtime configuration.
+- Remove redundant GPU-wide texture upload waits and start with a larger sprite pool, which still grows for bigger scenes. These reduce framework overhead; large-farm FPS improvements have not been measured.
+- Preserve KNULLI battery/performance HUD context by default (`SDV_HUD=auto`). The old `SDV_PERFORMANCE_OVERLAY=0` no longer hides it. Helpers do not load the HUD.
+- Fix built-in shader resource names and stop audio workers before native teardown. The reported exit status 139 has not been reproduced on the handheld; this is not a confirmed fix for its cause.
+- Add early managed startup, CPU eligibility and framework phase logs to locate the remaining startup delay.
+- Retain preparation caching, Windows/Linux mainline import handling and built-in rumble.
 
-**Existing installations:** close the game and extract `stardewvalley-rg34xxsp-performance-update.zip` into `/userdata/roms/ports/`, allowing replacement. It contains only the launcher, preparation helpers, patcher and patch DLL. It preserves your game files, saves, mods and config. New settings have defaults, so you need not replace your config. First launch prepares/cache-stamps the files; compare the second launch to v0.1.1.
+**Upgrade:** close the game, back up saves, then extract `stardewvalley-rg34xxsp-performance-update.zip` into `/userdata/roms/ports/`, allowing replacement. Includes launcher/helpers, importer, patch DLL and MonoGame overlay. Does not include or overwrite retail game files, saves, mods or your configuration. Missing new config settings use their defaults. Select the battery HUD in KNULLI and launch through its menu. Compare loading on the second launch.
 
-**Fresh installs:** use `stardewvalleymainline.zip`, then copy a clean Windows or Linux Steam .NET 6 mainline installation into `stardewvalleymainline/gamedata/`.
+**Fresh install:** use `stardewvalleymainline.zip`, then supply a clean owned Windows or Linux Steam .NET 6 mainline installation. No retail files are included.
 
-**Validation:** 21 launcher/native-helper tests, managed import and DLL-handle fixtures, header-scan allocation checks and package checks passed locally. A user confirmed v0.1.1 gameplay and rumble on RG34XXSP/KNULLI. v0.1.2 loading-time and FPS gains have not been measured on hardware. Steam services remain unavailable; formal retail-version and suspend/resume coverage is pending.
+**Validation:** 27 Python checks, managed import and rumble integration checks, package validation and .NET 6.0.36 SDL/OpenGL graphics/audio smoke tests passed. Graphics tests cover full/partial texture ordering, 8192 sprites, pool growth and worker shutdown with synchronization enabled and disabled. The owner reports gameplay/rumble working on KNULLI Scarab using recent Windows mainline files without mods. v0.1.3 handheld speed, battery HUD and exit behavior remain to be checked. Performance governor mode can increase heat and battery usage.
 
-[Installation/configuration guide](https://github.com/cdale11/sv-port#readme) · [Hardware checks](https://github.com/cdale11/sv-port/blob/main/docs/HARDWARE-VALIDATION.md)
+[Install/configure](https://github.com/cdale11/sv-port#readme) · [Performance settings](https://github.com/cdale11/sv-port/blob/main/docs/PERFORMANCE.md) · [Hardware validation](https://github.com/cdale11/sv-port/blob/main/docs/HARDWARE-VALIDATION.md)

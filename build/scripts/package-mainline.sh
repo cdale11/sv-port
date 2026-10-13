@@ -223,6 +223,37 @@ build_patch_dll() {
   cp "$patch_dll" "$ARTIFACTS/StardewPatches.dll"
 }
 
+validate_framework_graphics() {
+  local mode host_arch host_archive host_runtime
+  case "$(uname -m)" in
+    aarch64) host_arch=arm64 ;;
+    x86_64) host_arch=x64 ;;
+    *) echo "Unsupported graphics-test host architecture" >&2; return 1 ;;
+  esac
+  host_archive="$CACHE_DIR/dotnet-runtime-$DOTNET_RUNTIME_VERSION-linux-$host_arch.tar.gz"
+  host_runtime="$CACHE_DIR/graphics-runtime-$host_arch"
+  if [ ! -f "$host_archive" ]; then
+    curl -fsSL "https://dotnetcli.azureedge.net/dotnet/Runtime/$DOTNET_RUNTIME_VERSION/dotnet-runtime-$DOTNET_RUNTIME_VERSION-linux-$host_arch.tar.gz" -o "$host_archive"
+  fi
+  mkdir -p "$host_runtime"
+  tar -xzf "$host_archive" -C "$host_runtime"
+  rm -rf "$ROOT/tests/FrameworkSmoke/bin" "$ROOT/tests/FrameworkSmoke/obj"
+  dotnet build "$ROOT/tests/FrameworkSmoke" -c Release -p:MonoGameReference="$ARTIFACTS/MonoGame.Framework.dll"
+  for mode in 0 1; do
+    xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 ALSOFT_DRIVERS=null \
+      SDV_TEXTURE_UPLOAD_SYNC="$mode" SDV_SPRITE_BATCH_CAPACITY=2048 SDV_STARTUP_DIAGNOSTICS=1 \
+      DOTNET_TieredPGO=1 DOTNET_TC_QuickJitForLoops=1 \
+      DOTNET_STARTUP_HOOKS="$ARTIFACTS/StardewPatches.dll" \
+      "$host_runtime/dotnet" "$ROOT/tests/FrameworkSmoke/bin/Release/net6.0/FrameworkSmoke.dll" \
+      > "$LOG_DIR/framework-graphics-$mode.log" 2>&1 || {
+        cat "$LOG_DIR/framework-graphics-$mode.log" >&2
+        return 1
+      }
+    grep -q 'Managed startup at' "$LOG_DIR/framework-graphics-$mode.log"
+    grep -q 'PASS: full/partial texture upload ordering' "$LOG_DIR/framework-graphics-$mode.log"
+  done
+}
+
 build_game_data_patcher() {
   rm -rf "$PATCHER_OUT"
   rm -rf "$ROOT/build/src/MainlineGameDataPatcher/bin" "$ROOT/build/src/MainlineGameDataPatcher/obj"
@@ -383,6 +414,7 @@ verify_staged_package_layout() {
     "$dest_game_dir/libs.aarch64/rg34xxsp-rumble"
     "$dest_game_dir/tools/rg34xxsp-profile"
     "$dest_game_dir/tools/preparation-cache"
+    "$dest_game_dir/tools/cpu-performance"
     "$dest_game_dir/gl4es.aarch64/libGL.so.1"
     "$dest_game_dir/tools/smapi-common"
     "$dest_game_dir/tools/SMAPIBundle/game-root/StardewModdingAPI.dll"
@@ -616,7 +648,7 @@ create_release_archive() {
 
   cat > "$RELEASE_STAGE_ROOT/BUILD-STATUS.txt" <<EOF
 Target: Anbernic RG34XXSP / KNULLI / aarch64
-MonoGame base: 3874df98675039d368e77dca50d9a00ac970537e + build/patches/monogame-rg34xxsp.patch
+MonoGame base: 3874df98675039d368e77dca50d9a00ac970537e + monogame-rg34xxsp.patch + monogame-performance.patch
 Runtime: .NET $DOTNET_RUNTIME_VERSION; SMAPI $SMAPI_VERSION; SkiaSharp $SKIA_VERSION
 Retail smoke tests skipped: $SKIP_VALIDATION
 Physical RG34XXSP validation: not performed by this build script
@@ -684,9 +716,13 @@ EOF
   mkdir -p "$hotfix_root/$hotfix_relative"
   cp -R "$release_game_dir/tools/MainlineGameDataPatcher/." "$hotfix_root/$hotfix_relative/"
   cp "$RELEASE_STAGE_ROOT/StardewValleyMainline.sh" "$hotfix_root/"
-  cp "$release_game_dir/tools/rg34xxsp-profile" "$release_game_dir/tools/preparation-cache" "$hotfix_root/stardewvalleymainline/tools/"
+  cp "$release_game_dir/tools/rg34xxsp-profile" "$release_game_dir/tools/preparation-cache" \
+    "$release_game_dir/tools/cpu-performance" "$release_game_dir/tools/diagnose-rg34xxsp" \
+    "$hotfix_root/stardewvalleymainline/tools/"
   mkdir -p "$hotfix_root/stardewvalleymainline/dlls"
   cp "$release_game_dir/dlls/StardewPatches.dll" "$hotfix_root/stardewvalleymainline/dlls/"
+  mkdir -p "$hotfix_root/stardewvalleymainline/overrides/gamedata"
+  cp "$release_game_dir/overrides/gamedata/MonoGame.Framework.dll" "$hotfix_root/stardewvalleymainline/overrides/gamedata/"
   # Preserve existing config: new settings have defaults in the launcher/profile.
   rm -f "$RELEASE_DIR/$hotfix_name"
   (cd "$hotfix_root" && zip -qr "$RELEASE_DIR/$hotfix_name" StardewValleyMainline.sh stardewvalleymainline)
@@ -702,6 +738,7 @@ if [ "$VALIDATE_ONLY" -eq 0 ]; then
   validate_dynamic_audio_api
   validate_monogame_compat_api
   build_patch_dll
+  validate_framework_graphics
   build_game_data_patcher
   if [ "$SKIP_VALIDATION" -eq 0 ]; then build_fixture_smapi_mod; fi
   build_native_shims

@@ -1,0 +1,44 @@
+#!/bin/bash
+# Per-launch CPU policy; never online cores, overclock, or write persistent CFW settings.
+sdv_cpu_begin() {
+  sdv_governor_paths=()
+  sdv_governor_original=()
+  sdv_cpu_args=()
+  local root="${SDV_CPU_SYSFS_ROOT:-/sys/devices/system/cpu}" policy available original online
+  if [ "${SDV_CPU_AFFINITY:-all}" = all ] && command -v taskset >/dev/null 2>&1 && [ -r "$root/online" ]; then
+    online="$(cat "$root/online")"
+    if [[ "$online" =~ ^[0-9,-]+$ ]] && taskset -c "$online" true 2>/dev/null; then
+      sdv_cpu_args=(taskset -c "$online")
+      echo "CPU scheduling: all online cores requested ($online); kernel cpuset restrictions still apply."
+    else
+      echo "CPU scheduling: using inherited affinity; online-core request unavailable."
+    fi
+  else
+    echo "CPU scheduling: using inherited affinity."
+  fi
+  if [ "${SDV_CPU_GOVERNOR:-performance}" = performance ]; then
+    for policy in "$root"/cpufreq/policy*; do
+      [ -w "$policy/scaling_governor" ] && [ -r "$policy/scaling_available_governors" ] || continue
+      available=" $(cat "$policy/scaling_available_governors") "
+      [[ "$available" = *' performance '* ]] || continue
+      original="$(cat "$policy/scaling_governor")"
+      [ "$original" != performance ] || continue
+      if printf 'performance\n' > "$policy/scaling_governor"; then
+        sdv_governor_paths+=("$policy/scaling_governor")
+        sdv_governor_original+=("$original")
+        echo "CPU governor: $policy -> performance (restore $original on exit)."
+      fi
+    done
+  fi
+}
+
+sdv_cpu_end() {
+  local index path
+  for index in "${!sdv_governor_paths[@]}"; do
+    path="${sdv_governor_paths[$index]}"
+    # Respect a later firmware/system policy change instead of overwriting it.
+    if [ -w "$path" ] && [ "$(cat "$path")" = performance ]; then
+      printf '%s\n' "${sdv_governor_original[$index]}" > "$path" || true
+    fi
+  done
+}

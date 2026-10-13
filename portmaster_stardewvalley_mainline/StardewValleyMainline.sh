@@ -38,6 +38,9 @@ fi
 
 if [ -f "$gamedir/rg34xxsp.conf" ]; then source "$gamedir/rg34xxsp.conf"; fi
 source "$gamedir/tools/rg34xxsp-profile"
+source "$gamedir/tools/cpu-performance"
+sdv_governor_paths=()
+sdv_governor_original=()
 if [ "$(uname -m)" != aarch64 ]; then
   echo "This port requires 64-bit KNULLI (aarch64)."
   exit 1
@@ -49,6 +52,7 @@ cleanup() {
   if [ -n "$game_pid" ]; then kill "$game_pid" 2>/dev/null || true; wait "$game_pid" 2>/dev/null || true; fi
   if [ -n "$gptokeyb_pid" ]; then kill "$gptokeyb_pid" 2>/dev/null || true; wait "$gptokeyb_pid" 2>/dev/null || true; fi
   if [ -n "${SDV_RUMBLE_HELPER:-}" ]; then printf '0\n' > "$SDV_RUMBLE_DEVICE" || true; fi
+  sdv_cpu_end
   if command -v pm_finish >/dev/null 2>&1; then pm_finish; fi
 }
 trap cleanup EXIT
@@ -162,7 +166,7 @@ else
   if [ "$launch_mode" = smapi ]; then
     sdv_smapi_sync_default_mods "$smapi_default_mods_dir" "$modsdir"
   fi
-  if ! "$DOTNET_ROOT/dotnet" "$gamedir/tools/MainlineGameDataPatcher/MainlineGameDataPatcher.dll" "${patcher_args[@]}"; then
+  if ! env LD_PRELOAD="$SDV_NONHUD_PRELOAD" MANGOHUD=0 DISABLE_MANGOHUD=1 "$DOTNET_ROOT/dotnet" "$gamedir/tools/MainlineGameDataPatcher/MainlineGameDataPatcher.dll" "${patcher_args[@]}"; then
     cat "${gamedir}/log.txt" > "$CUR_TTY"
     sleep 5
     exit 1
@@ -182,14 +186,21 @@ fi
 
 cd "$gamedir/gamedata"
 
-$GPTOKEYB "$DOTNET_ROOT/dotnet" &
+env LD_PRELOAD="$SDV_NONHUD_PRELOAD" MANGOHUD=0 DISABLE_MANGOHUD=1 $GPTOKEYB "$DOTNET_ROOT/dotnet" &
 gptokeyb_pid=$!
 command -v pm_platform_helper >/dev/null 2>&1 && pm_platform_helper "$DOTNET_ROOT/dotnet"
 printf 'Starting %s at %(%Y-%m-%dT%H:%M:%S%z)T; launcher elapsed: %ss.\n' "$entry_assembly" -1 "$((SECONDS - startup_seconds))"
-"$DOTNET_ROOT/dotnet" "$entry_assembly" &
+sdv_cpu_begin
+# Let .NET see the actual affinity, rather than an inherited manual count cap.
+unset DOTNET_PROCESSOR_COUNT
+export DOTNET_STARTUP_HOOKS="$gamedir/dlls/StardewPatches.dll${DOTNET_STARTUP_HOOKS:+:$DOTNET_STARTUP_HOOKS}"
+"${sdv_cpu_args[@]}" "$DOTNET_ROOT/dotnet" "$entry_assembly" &
 game_pid=$!
 wait "$game_pid"
 game_status=$?
 game_pid=
 echo "Stardew Valley exited with status ${game_status}."
+if [ "$game_status" = 139 ]; then
+  echo "Native process ended with SIGSEGV; note whether it happened during play or after quitting. CPU tuning does not diagnose the native fault."
+fi
 exit "$game_status"

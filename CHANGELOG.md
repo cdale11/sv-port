@@ -3,6 +3,13 @@
 All releases remain experimental. Loading-time and FPS improvements are not yet
 measured on the handheld. See [hardware validation](docs/HARDWARE-VALIDATION.md).
 
+## Unreleased — documentation maintenance
+
+- Record v0.1.3 battery HUD confirmation, four-core eligibility, game assembly
+  version, measured startup stages and deliberate Fn+Start exit context.
+- Document normal quit/save behavior and defer further startup tuning.
+- Add focused issue and pull-request templates; retain existing release archives.
+
 ## v0.1.3 — CPU, rendering and battery HUD
 
 [Release and downloads](https://github.com/cdale11/sv-port/releases/tag/rg34xxsp-knulli-v0.1.3)

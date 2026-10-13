@@ -26,9 +26,10 @@ Checksums are available on the release page. GitHub’s **Source code** archives
 
 | Area | Current status |
 | --- | --- |
-| Gameplay and internal rumble | Reported working by the device owner on v0.1.1; the supplied log confirms the motor bridge initializes. |
+| Gameplay and internal rumble | Reported working by the device owner; v0.1.3 logs confirm the motor bridge initializes on KNULLI Scarab. |
 | Windows/Linux imports | Import fixtures pass. Exact retail version/source coverage is still incomplete; future game updates may require port changes. |
-| v0.1.3 startup changes | CPU/HUD fixtures and real .NET 6 SDL/OpenGL rendering/audio tests pass; handheld speed comparisons are pending. |
+| Battery HUD and CPU eligibility | Battery display confirmed working on v0.1.3; the device log shows four CPUs and affinity `0–3`. |
+| Startup and large-farm performance | Repeat preparation is 0 seconds; about 32 seconds remain before initialization. Large-farm FPS gains are unmeasured. |
 | SMAPI | Bundled version 4.5.2. Individual mods depend on matching game/API versions, available memory and compatible native libraries. |
 | Audio recovery, lid suspend/resume, HDMI, external controllers and LAN multiplayer | Firmware integration is retained; full hardware validation is pending. Closing the lid does not save the game. |
 | Steam services | Steam overlay, achievements, cloud saves and Steam-invite multiplayer are unavailable through the upstream API stubs. |
@@ -76,7 +77,7 @@ This fork uses the upstream `stardewvalleymainline` directory. Installing it ove
 - **Lower preparation overhead:** architecture checks read DLL headers rather than entire assemblies. Unused mods are not normalized in vanilla mode; SMAPI defaults are copied only during preparation.
 - **Device defaults:** 720×480 fallback, PortMaster display dimensions for HDMI, workstation GC, tiered compilation and ReadyToRun. KNULLI-selected battery HUD is preserved. No system overclock is applied.
 - **CPU and rendering:** request all online cores, temporarily select the supported performance governor, enable tiered JIT/PGO, remove redundant texture-upload GPU waits and preallocate larger sprite batches. The main game simulation remains single-threaded; see [performance settings and limits](docs/PERFORMANCE.md).
-- **Audio shutdown:** stop audio workers before destroying native resources. This addresses a lifetime race; the reported exit status 139 has not been reproduced on the handheld.
+- **Audio shutdown:** stop audio workers before destroying native resources. This addresses a lifetime race. Fn+Start exit can still log a native error; see troubleshooting.
 - **Maintenance:** ARM64 cross builds, regression fixtures, package checksums, startup timings, diagnostics, GitHub checks and downloadable upgrade packages.
 
 The base rendering/audio patches, GL4ES integration, Steam API stubs and original SMAPI packaging come from upstream. See [credits and provenance](docs/CREDITS.md) for ownership and contribution details.
@@ -95,6 +96,8 @@ The port uses KNULLI/PortMaster’s SDL controller mapping. These are the inheri
 | L2 / R2 | Cycle toolbar item |
 | Start | Pause or open menu |
 | Select | Journal |
+
+Use Stardew’s in-game quit option for a normal shutdown. **Fn+Start** is the PortMaster exit shortcut and does not save progress; save at the end of the day before exiting.
 
 ## Configuration
 
@@ -116,6 +119,8 @@ Edit `stardewvalleymainline/rg34xxsp.conf` with the game closed.
 
 The old `SDV_PERFORMANCE_OVERLAY` setting is superseded and ignored, so an existing value of `0` no longer hides the battery meter. Select the battery HUD in KNULLI and leave `SDV_HUD=auto`. Performance governor mode can use more battery and generate more heat; the launcher restores the original governor on handled exit.
 
+Keep the shipped performance defaults for normal play. Further investigation of the startup delay is deferred at the owner’s request; no extra tuning is required.
+
 The cache compares file size, modification/change timestamps and inode metadata rather than hashing all DLL contents. If you deliberately replace files while preserving their metadata, force preparation or delete `stardewvalleymainline/.preparation-cache`.
 
 ## Saves and mods
@@ -133,7 +138,7 @@ The main log is `stardewvalleymainline/log.txt`.
 | --- | --- |
 | Slow startup | Look for `Preparation cache hit` on a repeat launch. Compare `Startup preparation`, total launcher time and game-start/patch-initialization timestamps. |
 | Battery HUD missing | Select the HUD in KNULLI, use `SDV_HUD=auto` and launch through the KNULLI menu. An SSH launch may lack HUD context. |
-| Exit status 139 | Send the final log and explain whether it happened during gameplay or after quitting; it is not treated as a successful exit. |
+| Exit status 135/139 | The owner confirmed status 135 after deliberately exiting with Fn+Start, not an unexpected closure during play. Its native cause is unconfirmed. For an unexpected closure, report the scene and final log. |
 | Cache never hits | Check for changed game/mod files, `SDV_FORCE_PREPARE=1`, or the cache-unavailable message. |
 | Missing/incomplete game files | Check the `gamedata/` layout and copy a clean mainline installation. |
 | `MonoGame.Framework.dll` reported in use at `CopyOverlayFiles` | Upgrade from v0.1.0; v0.1.1 and later close Cecil dependency handles before copying. |

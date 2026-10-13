@@ -15,16 +15,20 @@ Power loss or forcibly killing the launcher cannot execute cleanup. Set
 
 ## Startup and hot code
 
-Preparation caching already reduces repeat preparation to near zero. The reported
-34-second interval occurs after starting .NET and before patch initialization;
-it is not a repeat patching delay. v0.1.3 logs `Managed startup`, framework stages,
+Preparation caching already reduces repeat preparation to near zero. The v0.1.3 device log shows a
+32.2-second interval after audio setup and before game initialization;
+it is not a repeat patching delay. The current markers do not distinguish retail
+construction, static initialization, compilation or other setup in that gap. v0.1.3 logs `Managed startup`, framework stages,
 CPU count, affinity and entry assembly identity to locate this interval.
 
 Tiered compilation first runs quick code, then recompiles hot code in the
 background. Dynamic PGO uses runtime profiles to optimize that hot code. Quick
 loop compilation can shorten initial compilation but can run slower until a
 method is promoted. Defaults enable all three; compare the same save after a
-warm-up, not only its first frame. Advanced fallbacks in `rg34xxsp.conf`:
+warm-up, not only its first frame. Further startup tuning is deferred because the owner reports the game working
+well. Keep the shipped defaults; the suggested quick-loop comparison was not
+reported as performed and is not a confirmed improvement. Optional diagnostic
+fallbacks in `rg34xxsp.conf`:
 
 ```sh
 SDV_TIERED_PGO=0
@@ -68,7 +72,9 @@ launch after cache creation, time to title and time to load the farm. Record bus
 farm frame times after warming up, plus temperature/battery behavior. Share
 `log.txt` and `bash tools/diagnose-rg34xxsp` output. Build-host tests validate
 behavior, not handheld speed. A shutdown-worker race is addressed, but the owner's
-exit status 139 has no confirmed root cause; include the final log when retesting.
+v0.1.3 status 135 followed deliberate Fn+Start exit. Its native cause, and earlier
+status 139, remain unconfirmed. Prefer the in-game quit option for a normal
+shutdown; the hotkey does not save progress.
 
 ## Runtime references
 

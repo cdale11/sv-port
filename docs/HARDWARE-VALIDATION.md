@@ -2,15 +2,31 @@
 
 ## User-reported device result
 
-The device owner reports gameplay and built-in rumble working on RG34XXSP with
-**KNULLI Scarab**, recent Windows mainline game files and no mods. Exact game
-version was not supplied. A v0.1.2 repeat-launch log shows preparation cached in
-0 seconds, then about 34 seconds before patch initialization. Exit status 139 was
-logged, but the user reports no in-game crash. Battery HUD was missing.
+The device owner reports the game working well, with built-in rumble and battery
+HUD on RG34XXSP running **KNULLI Scarab**, Windows mainline files and no mods.
+The v0.1.3 log identifies the game assembly as **1.6.15.24356**.
 
-v0.1.3 addresses HUD filtering, CPU/runtime/rendering overhead and an audio
-shutdown race. Its handheld loading times, large-farm frame rates, HUD restoration
-and exit behavior still need verification.
+| Observed on v0.1.3 | Result |
+| --- | --- |
+| Repeat-launch preparation | Cache hit, 0 seconds |
+| .NET CPU eligibility | Four processors; affinity `0–3`; workstation GC; PGO enabled |
+| SDL/audio setup | Under one second after the framework constructor marker |
+| Remaining startup gap | About 32.2 seconds after audio setup and before game initialization |
+| Game initialization | About 5.7 seconds |
+| Launch to first completed tick | About 42 seconds; this is not a measured time to title or farm load |
+| Battery HUD | Confirmed visible by owner |
+| Native exit status | 135 (bus error), following deliberate **Fn+Start** exit |
+
+The owner clarified that the game did not close unexpectedly during play. The
+native cause of the hotkey-exit error remains unconfirmed; it is not recorded as
+a clean native shutdown or a fixed bug. Earlier status 139 also remains unresolved.
+The log does not prove the performance governor changed or establish maximum
+sustained frequency, temperature, battery drain or large-farm FPS.
+
+Further startup tuning is deferred at the owner's request because gameplay is
+working well. Keep the current release and defaults. Windows gameplay is
+user-reported; Linux retail gameplay, exact feature coverage and the remaining
+hardware checks below are still pending.
 
 ## Completed in the build environment
 
@@ -30,7 +46,7 @@ and exit behavior still need verification.
 
 These automated checks do not establish hardware frame rate or loading-time gains.
 
-## Required on the handheld (not yet performed)
+## Remaining hardware checks (not a requirement for current use)
 
 Record KNULLI version, game version/store/Windows or Linux source, archive checksum,
 mods, display mode and save location with each result.

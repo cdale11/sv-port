@@ -18,6 +18,8 @@ jobs:
   package:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - run: bash build/scripts/build-rg34xxsp.sh
@@ -25,3 +27,15 @@ jobs:
         with:
           name: stardew-rg34xxsp-knulli-experimental
           path: build/out/mainline/release/*
+      - name: Publish experimental release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag=rg34xxsp-knulli-v0.1.0
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --draft --prerelease --target "$GITHUB_SHA" \
+              --title 'RG34XXSP KNULLI v0.1.0 — experimental' --notes-file docs/RELEASE-NOTES.md
+          fi
+          gh release upload "$tag" build/out/mainline/release/* --clobber
+          gh release edit "$tag" --draft=false --prerelease --notes-file docs/RELEASE-NOTES.md

@@ -9,7 +9,7 @@ with zipfile.ZipFile(sys.argv[1]) as package:
     base = 'stardewvalleymainline/'
     for name in ['StardewValleyMainline.sh', 'README.md', 'BUILD-STATUS.txt', 'SHA256SUMS'] + [base + p for p in [
         'libs.aarch64/rg34xxsp-rumble', 'tools/rg34xxsp-profile',
-        'tools/diagnose-rg34xxsp', 'dotnet/dotnet',
+        'tools/diagnose-rg34xxsp', 'tools/preparation-cache', 'dotnet/dotnet',
         'overrides/gamedata/MonoGame.Framework.dll',
         'tools/MainlineGameDataPatcher/MainlineGameDataPatcher.runtimeconfig.json',
         'tools/SMAPIBundle/game-root/StardewModdingAPI.dll']]:

@@ -1,4 +1,5 @@
 #!/bin/bash
+startup_seconds=$SECONDS
 
 XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
 
@@ -89,14 +90,13 @@ smapi_patch_path="$gamedir/dlls/StardewPatches.dll"
 patcher_args=(
   --game-dir "$gamedir/gamedata"
   --overlay-dir "$gamedir/overrides/gamedata"
-  --mods-dir "$modsdir"
 )
 
 if [ "$launch_mode" = "smapi" ]; then
-  sdv_smapi_sync_default_mods "$smapi_default_mods_dir" "$modsdir"
   entry_assembly="StardewModdingAPI.dll"
   smapi_patch_path="$gamedir/gamedata/smapi-internal/StardewPatches.dll"
   patcher_args+=(
+    --mods-dir "$modsdir"
     --smapi-bundle-dir "$smapi_game_root"
     --smapi-patch-assembly "$gamedir/dlls/StardewPatches.dll"
   )
@@ -153,11 +153,23 @@ if [ ! -f "$gamedir/gamedata/Stardew Valley.deps.json" ] || [ ! -f "$gamedir/gam
   exit 1
 fi
 
-if ! "$DOTNET_ROOT/dotnet" "$gamedir/tools/MainlineGameDataPatcher/MainlineGameDataPatcher.dll" "${patcher_args[@]}"; then
-  cat "${gamedir}/log.txt" > "$CUR_TTY"
-  sleep 5
-  exit 1
+source "$gamedir/tools/preparation-cache"
+prepare_seconds=$SECONDS
+if sdv_preparation_is_current; then
+  echo "Preparation cache hit; unchanged game files will not be repatched."
+else
+  rm -f "$gamedir/.preparation-cache"
+  if [ "$launch_mode" = smapi ]; then
+    sdv_smapi_sync_default_mods "$smapi_default_mods_dir" "$modsdir"
+  fi
+  if ! "$DOTNET_ROOT/dotnet" "$gamedir/tools/MainlineGameDataPatcher/MainlineGameDataPatcher.dll" "${patcher_args[@]}"; then
+    cat "${gamedir}/log.txt" > "$CUR_TTY"
+    sleep 5
+    exit 1
+  fi
+  sdv_preparation_store || echo "Preparation cache unavailable; next launch will prepare normally."
 fi
+echo "Startup preparation: $((SECONDS - prepare_seconds))s; launcher elapsed: $((SECONDS - startup_seconds))s."
 
 export MONOGAME_PATCH="$smapi_patch_path"
 if [ "$launch_mode" = "smapi" ]; then
@@ -173,6 +185,7 @@ cd "$gamedir/gamedata"
 $GPTOKEYB "$DOTNET_ROOT/dotnet" &
 gptokeyb_pid=$!
 command -v pm_platform_helper >/dev/null 2>&1 && pm_platform_helper "$DOTNET_ROOT/dotnet"
+printf 'Starting %s at %(%Y-%m-%dT%H:%M:%S%z)T; launcher elapsed: %ss.\n' "$entry_assembly" -1 "$((SECONDS - startup_seconds))"
 "$DOTNET_ROOT/dotnet" "$entry_assembly" &
 game_pid=$!
 wait "$game_pid"

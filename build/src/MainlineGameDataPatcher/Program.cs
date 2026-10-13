@@ -191,7 +191,7 @@ static void NormalizeManagedAssemblies(string rootDir, SearchOption searchOption
             continue;
         }
 
-        if (!NeedsArchitectureNormalization(filePath))
+        if (!ManagedPe.NeedsArchitectureNormalization(filePath))
         {
             continue;
         }
@@ -955,32 +955,6 @@ static FieldReference GetRequiredReferencedFieldFromAny(IEnumerable<MethodDefini
     }
 
     throw new InvalidOperationException($"Unable to find referenced field: {declaringTypeFullName}::{name}");
-}
-
-static bool NeedsArchitectureNormalization(string assemblyPath)
-{
-    var bytes = File.ReadAllBytes(assemblyPath);
-    if (bytes.Length < 0x40 || bytes[0] != 'M' || bytes[1] != 'Z')
-    {
-        return false;
-    }
-
-    var peOffset = BitConverter.ToInt32(bytes, 0x3C);
-    if (peOffset <= 0 || peOffset + 160 >= bytes.Length)
-    {
-        return false;
-    }
-
-    var machine = BitConverter.ToUInt16(bytes, peOffset + 4);
-    var optionalMagic = BitConverter.ToUInt16(bytes, peOffset + 24);
-    var dataDirectoryOffset = peOffset + 24 + (optionalMagic == 0x20B ? 112 : 96);
-    if (dataDirectoryOffset + 14 * 8 + 4 > bytes.Length)
-    {
-        return false;
-    }
-
-    var cliHeaderRva = BitConverter.ToUInt32(bytes, dataDirectoryOffset + 14 * 8);
-    return machine == 0x8664 && cliHeaderRva != 0;
 }
 
 static void NormalizeAssemblyArchitecture(string assemblyPath)

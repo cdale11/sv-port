@@ -8,6 +8,29 @@ export DOTNET_TieredCompilation=1
 export DOTNET_ReadyToRun=1
 export DOTNET_ROLL_FORWARD=LatestPatch
 export DOTNET_MULTILEVEL_LOOKUP=0
+# KNULLI may inject MangoHud globally. Avoid its game/helper hooks by default,
+# while preserving every other preload (including input/platform integrations).
+if [ "${SDV_PERFORMANCE_OVERLAY:-0}" != 1 ]; then
+  preload_keep=()
+  read -r -a preload_items <<< "${LD_PRELOAD//:/ }"
+  for preload_item in "${preload_items[@]}"; do
+    case "${preload_item,,}" in *mangohud*) ;; *) preload_keep+=("$preload_item") ;; esac
+  done
+  if [ "${#preload_keep[@]}" -gt 0 ]; then
+    preload_joined=
+    for preload_item in "${preload_keep[@]}"; do
+      preload_joined="${preload_joined}${preload_joined:+:}$preload_item"
+    done
+    export LD_PRELOAD="$preload_joined"
+  else
+    unset LD_PRELOAD
+  fi
+  export MANGOHUD=0
+  export DISABLE_MANGOHUD=1
+else
+  unset DISABLE_MANGOHUD
+fi
+unset preload_keep preload_items preload_item preload_joined
 export SDV_RUMBLE_DEVICE="${SDV_RUMBLE_DEVICE:-/sys/class/power_supply/axp2202-battery/moto}"
 export SDV_RUMBLE_PLAYER="${SDV_RUMBLE_PLAYER:-0}"
 if [ "${SDV_RUMBLE:-1}" = 1 ] && [ -w "$SDV_RUMBLE_DEVICE" ] &&

@@ -6,6 +6,7 @@
   <ItemGroup>
     <Compile Include="../../build/src/MainlineGameDataPatcher/GameImport.cs" Link="GameImport.cs" />
     <Compile Include="../../build/src/MainlineGameDataPatcher/AssemblyReadScope.cs" Link="AssemblyReadScope.cs" />
+    <Compile Include="../../build/src/MainlineGameDataPatcher/ManagedPe.cs" Link="ManagedPe.cs" />
     <PackageReference Include="Mono.Cecil" Version="0.11.6" />
   </ItemGroup>
 </Project>

@@ -33,10 +33,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          tag=rg34xxsp-knulli-v0.1.1
+          tag=rg34xxsp-knulli-v0.1.2
           if ! gh release view "$tag" >/dev/null 2>&1; then
             gh release create "$tag" --draft --prerelease --target "$GITHUB_SHA" \
-              --title 'RG34XXSP KNULLI v0.1.1 — patcher lock fix' --notes-file docs/RELEASE-NOTES.md
+              --title 'RG34XXSP KNULLI v0.1.2 — startup and overlay optimizations' --notes-file docs/RELEASE-NOTES.md
           fi
           gh release upload "$tag" build/out/mainline/release/* --clobber
           gh release edit "$tag" --draft=false --prerelease --notes-file docs/RELEASE-NOTES.md

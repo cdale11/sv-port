@@ -1,0 +1,41 @@
+#!/bin/bash
+# A metadata cache avoids starting CoreCLR/Cecil again for an unchanged install.
+# Any inability to inspect inputs falls back to full preparation.
+sdv_preparation_fingerprint() (
+  set -o pipefail
+  {
+    printf 'rg34xxsp-preparation-v1:%s\n' "$launch_mode"
+    {
+      find "$gamedir/gamedata" -path "$gamedir/gamedata/Content" -prune -o \
+        -type f \( -iname '*.dll' -o -iname '*.exe' -o -iname '*.json' \
+          -o -iname '*.so' -o -iname '*.so.*' -o -name 'Stardew Valley' -o -name 'StardewValley' \) -print0 || return 1
+      for path in "$gamedir/overrides" "$gamedir/dlls" "$gamedir/tools/MainlineGameDataPatcher"; do
+        [ ! -d "$path" ] || find "$path" -type f -print0 || return 1
+      done
+      printf '%s\0' "$gamedir/tools/preparation-cache"
+      if [ "$launch_mode" = smapi ]; then
+        for path in "$gamedir/Mods" "$gamedir/tools/SMAPIBundle"; do
+          [ ! -d "$path" ] || find "$path" -type f \
+            \( -iname '*.dll' -o -iname '*.exe' -o -iname '*.json' \) -print0 || return 1
+        done
+      fi
+    } | sort -z | xargs -0 -r stat -c '%n|%s|%y|%z|%i' || return 1
+  } | sha256sum | cut -d ' ' -f 1
+)
+
+sdv_preparation_is_current() {
+  [ "${SDV_FORCE_PREPARE:-0}" != 1 ] || return 1
+  [ -d "$gamedir/gamedata/Content" ] || return 1
+  [ -s "$gamedir/.preparation-cache" ] || return 1
+  local current cached
+  current="$(sdv_preparation_fingerprint)" || return 1
+  cached="$(cat "$gamedir/.preparation-cache")" || return 1
+  [ "$current" = "$cached" ]
+}
+
+sdv_preparation_store() {
+  local fingerprint
+  fingerprint="$(sdv_preparation_fingerprint)" || return 1
+  printf '%s\n' "$fingerprint" > "$gamedir/.preparation-cache.tmp" &&
+    mv -f "$gamedir/.preparation-cache.tmp" "$gamedir/.preparation-cache"
+}

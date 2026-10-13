@@ -3,8 +3,9 @@
 Experimental ARM64 port for the **Anbernic RG34XXSP running KNULLI**, based on
 [Producdevity's mainline port](https://github.com/Producdevity/portmaster-stardew-valley-mainline).
 Windows and Linux Steam mainline imports are implemented. This is a compiled,
-retail-free test release: gameplay with either retail build and testing on a real
-RG34XXSP are still required. No FPS or full compatibility claim is made.
+retail-free test release. A user has confirmed v0.1.1 gameplay and built-in rumble
+on RG34XXSP/KNULLI. The v0.1.2 performance changes still need device comparisons;
+no FPS or full compatibility claim is made.
 
 ## Download and install
 
@@ -28,15 +29,34 @@ installation directory and is not a second side-by-side mainline installation.
 When switching game versions or Windows/Linux sources, replace `gamedata/` with a
 clean copy; keep `savedata/` and `Mods/` separate.
 
-### v0.1.1 upgrade for the locked MonoGame DLL error
+### v0.1.2 upgrade for an existing installation
 
-If v0.1.0 aborts at `CopyOverlayFiles` with `MonoGame.Framework.dll` in use, close
-the game and extract `stardewvalley-rg34xxsp-patcher-hotfix.zip` from Releases into
-`/userdata/roms/ports/`, allowing replacement. This ZIP contains only the patcher
-folder under `stardewvalleymainline/tools/`; existing game files, saves, mods and
-configuration stay in place. Launch again. The patcher now disposes Cecil's cached
-dependency assemblies before overlay copying. A fresh game import is unnecessary
-for this specific failure.
+Close the game and extract `stardewvalley-rg34xxsp-performance-update.zip` from
+[v0.1.2 Releases](https://github.com/cdale11/sv-port/releases/tag/rg34xxsp-knulli-v0.1.2)
+into `/userdata/roms/ports/`, allowing replacement. This updates the launcher,
+preparation helpers, patcher and small patch DLL. Game files, saves, mods and
+`rg34xxsp.conf` stay in place. It includes the v0.1.1 DLL-lock fix.
+
+The first launch prepares the files and creates `.preparation-cache`. Later
+launches compare dependency file metadata and skip CoreCLR/Cecil preparation when
+unchanged. Game/patcher/overlay/native-library changes and SMAPI mode or assembly
+changes invalidate the cache. Content textures/maps do not require assembly
+repatching. A failed preparation never creates a valid cache. If metadata tools
+are unavailable, the launcher falls back to normal preparation.
+
+Cache checks inspect sizes, timestamps and inode metadata, not every file's
+contents. When deliberately replacing files while preserving their metadata,
+force preparation by adding `SDV_FORCE_PREPARE=1` to `rg34xxsp.conf` for one launch,
+then reset it to `0`; deleting `.preparation-cache` also works.
+
+DLL architecture checks now read only PE/CLI headers. MangoHud injection is
+filtered out by default for this port, preserving other preload libraries. Add
+`SDV_PERFORMANCE_OVERLAY=1` to the existing config if you want KNULLI's overlay
+injection preserved. The update ZIP does not overwrite your config.
+
+The log includes preparation duration, total launcher duration, game-start time
+and patch-initialization time. These distinguish launcher work from subsequent
+game/audio/content loading. Hardware loading-time and FPS gains are unmeasured.
 
 ## Device support
 
@@ -66,6 +86,8 @@ Edit `stardewvalleymainline/rg34xxsp.conf`:
 - `SDV_LAUNCH_MODE=auto`, `vanilla`, or `smapi`.
 - `SDV_RUMBLE=1` enables the built-in bridge; `0` leaves only SDL controller rumble.
 - `SDV_RUMBLE_PLAYER=0` selects the zero-based controller index for the built-in motor.
+- `SDV_PERFORMANCE_OVERLAY=0` filters inherited MangoHud injection; `1` preserves it.
+- `SDV_FORCE_PREPARE=1` bypasses the preparation cache; normally leave it at `0`.
 
 The game writes `stardewvalleymainline/log.txt`. Look for
 `RG34XXSP KNULLI rumble ready` when the game initializes vibration support.

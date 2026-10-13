@@ -1,5 +1,12 @@
 # RG34XXSP / KNULLI validation
 
+## User-reported device result
+
+A user confirmed gameplay and built-in rumble working on an RG34XXSP running
+KNULLI with v0.1.1. The supplied log confirms the bridge initializes. Exact game
+version/source, sustained frame rate and suspend/resume were not supplied.
+The v0.1.2 optimization changes still need device comparisons.
+
 ## Completed in the build environment
 
 - Patched MonoGame DesktopGL, importer and patch assembly compile.
@@ -9,9 +16,12 @@
 - Launcher mock tests cover vanilla launch, 720×480 fallback, platform hook, failed patching, invalid mode, cleanup and game exit status.
 - Motor helper tests cover commands, timeout, pipe EOF, SIGTERM, missing device and malformed input.
 - Managed-to-native integration covers player routing, both vibration channels, stop, timeout and close.
+- Cache regression tests cover unchanged launches, game/native/overlay/patcher changes, SMAPI changes, failure fallback and forced preparation.
+- Architecture scans allocate about 4.5 KB for a synthetic 64 MiB DLL. This measures allocation, not device loading time.
+- MangoHud filtering preserves other preloads and supports opt-in.
 - Package checked for expected payloads and absence of retail game files.
 
-These checks do not prove gameplay, frame rate or real motor behavior.
+These automated checks do not establish hardware frame rate or loading-time gains.
 
 ## Required on the handheld (not yet performed)
 

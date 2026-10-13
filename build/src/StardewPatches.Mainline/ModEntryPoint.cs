@@ -10,6 +10,6 @@ public static class StardewPatches
 {
     public static void Main()
     {
-        Console.Out.WriteLine("StardewPatches initialized");
+        Console.Out.WriteLine($"StardewPatches initialized at {DateTimeOffset.Now:O}");
     }
 }

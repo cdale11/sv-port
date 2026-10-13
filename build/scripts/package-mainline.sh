@@ -381,6 +381,7 @@ verify_staged_package_layout() {
     "$dest_game_dir/libs.aarch64/libSkiaSharp.so"
     "$dest_game_dir/libs.aarch64/rg34xxsp-rumble"
     "$dest_game_dir/tools/rg34xxsp-profile"
+    "$dest_game_dir/tools/preparation-cache"
     "$dest_game_dir/gl4es.aarch64/libGL.so.1"
     "$dest_game_dir/tools/smapi-common"
     "$dest_game_dir/tools/SMAPIBundle/game-root/StardewModdingAPI.dll"
@@ -675,14 +676,19 @@ EOF
 
   # Upgrade existing installations without touching their game files, saves,
   # mods or device configuration.
-  local hotfix_root="$OUT/patcher-hotfix"
-  local hotfix_name=stardewvalley-rg34xxsp-patcher-hotfix.zip
+  local hotfix_root="$OUT/performance-update"
+  local hotfix_name=stardewvalley-rg34xxsp-performance-update.zip
   local hotfix_relative=stardewvalleymainline/tools/MainlineGameDataPatcher
   rm -rf "$hotfix_root"
   mkdir -p "$hotfix_root/$hotfix_relative"
   cp -R "$release_game_dir/tools/MainlineGameDataPatcher/." "$hotfix_root/$hotfix_relative/"
+  cp "$RELEASE_STAGE_ROOT/StardewValleyMainline.sh" "$hotfix_root/"
+  cp "$release_game_dir/tools/rg34xxsp-profile" "$release_game_dir/tools/preparation-cache" "$hotfix_root/stardewvalleymainline/tools/"
+  mkdir -p "$hotfix_root/stardewvalleymainline/dlls"
+  cp "$release_game_dir/dlls/StardewPatches.dll" "$hotfix_root/stardewvalleymainline/dlls/"
+  # Preserve existing config: new settings have defaults in the launcher/profile.
   rm -f "$RELEASE_DIR/$hotfix_name"
-  (cd "$hotfix_root" && zip -qr "$RELEASE_DIR/$hotfix_name" stardewvalleymainline)
+  (cd "$hotfix_root" && zip -qr "$RELEASE_DIR/$hotfix_name" StardewValleyMainline.sh stardewvalleymainline)
   (cd "$RELEASE_DIR" && sha256sum "$hotfix_name" > "$hotfix_name.sha256")
 
 }

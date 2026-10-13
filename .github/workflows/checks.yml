@@ -16,6 +16,7 @@ jobs:
       - run: dotnet build build/src/MainlineGameDataPatcher -c Release
       - run: bash -n portmaster_stardewvalley_mainline/StardewValleyMainline.sh
   package:
+    needs: checks
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     permissions:

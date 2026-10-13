@@ -1,0 +1,19 @@
+#!/bin/bash
+# RG34XXSP / KNULLI defaults. Source after PortMaster get_controls.
+export DISPLAY_WIDTH="${DISPLAY_WIDTH:-720}"
+export DISPLAY_HEIGHT="${DISPLAY_HEIGHT:-480}"
+# Workstation GC avoids a server heap per core on the 2 GB H700 handheld.
+export DOTNET_gcServer=0
+export DOTNET_TieredCompilation=1
+export DOTNET_ReadyToRun=1
+export DOTNET_ROLL_FORWARD=LatestPatch
+export DOTNET_MULTILEVEL_LOOKUP=0
+export SDV_RUMBLE_DEVICE="${SDV_RUMBLE_DEVICE:-/sys/class/power_supply/axp2202-battery/moto}"
+export SDV_RUMBLE_PLAYER="${SDV_RUMBLE_PLAYER:-0}"
+if [ "${SDV_RUMBLE:-1}" = 1 ] && [ -w "$SDV_RUMBLE_DEVICE" ] &&
+   [ -x "$gamedir/libs.aarch64/rg34xxsp-rumble" ]; then
+  export SDV_RUMBLE_HELPER="$gamedir/libs.aarch64/rg34xxsp-rumble"
+else
+  unset SDV_RUMBLE_HELPER
+  echo "Built-in rumble disabled or unavailable; SDL controller rumble remains available."
+fi

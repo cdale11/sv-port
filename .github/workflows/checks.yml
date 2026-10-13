@@ -1,0 +1,27 @@
+name: Port checks
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: python3 -m unittest discover -s tests -v
+      - run: dotnet run --project tests/ImportTests -c Release
+      - run: gcc -std=c11 -O2 -Wall -Wextra -Werror build/src/native/rg34xxsp_rumble.c -o /tmp/rg34xxsp-rumble && dotnet run --project tests/RumbleIntegration -c Release -- /tmp/rg34xxsp-rumble
+      - run: dotnet build build/src/MainlineGameDataPatcher -c Release
+      - run: bash -n portmaster_stardewvalley_mainline/StardewValleyMainline.sh
+  package:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash build/scripts/build-rg34xxsp.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stardew-rg34xxsp-knulli-experimental
+          path: build/out/mainline/release/*

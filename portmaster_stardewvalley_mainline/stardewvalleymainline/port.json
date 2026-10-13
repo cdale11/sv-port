@@ -1,0 +1,41 @@
+{
+  "version": 4,
+  "name": "stardewvalleymainline.zip",
+  "items": [
+    "StardewValleyMainline.sh",
+    "stardewvalleymainline"
+  ],
+  "items_opt": [],
+  "attr": {
+    "title": "Stardew Valley \u2014 RG34XXSP (KNULLI)",
+    "porter": [
+      "Producdevity",
+      "Johnny on Flame"
+    ],
+    "desc": "Experimental Windows/Linux mainline port for Anbernic RG34XXSP on KNULLI, with built-in motor rumble and optional SMAPI.",
+    "desc_md": null,
+    "inst": "Copy a clean Windows or Linux Steam mainline installation into stardewvalleymainline/gamedata. Requires 64-bit KNULLI and PortMaster. Retail gameplay and hardware validation pending. See README.md.",
+    "inst_md": null,
+    "genres": [
+      "rpg",
+      "simulation"
+    ],
+    "image": null,
+    "rtr": false,
+    "exp": true,
+    "runtime": [],
+    "store": [
+      {
+        "name": "Steam",
+        "gameurl": "https://store.steampowered.com/app/413150/Stardew_Valley/",
+        "developerurl": "https://www.stardewvalley.net/"
+      }
+    ],
+    "availability": "paid",
+    "reqs": [],
+    "arch": [
+      "aarch64"
+    ],
+    "min_glibc": ""
+  }
+}

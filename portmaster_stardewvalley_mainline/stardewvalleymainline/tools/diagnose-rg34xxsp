@@ -1,0 +1,21 @@
+#!/bin/bash
+set -uo pipefail
+gamedir="$(cd -- "$(dirname "$0")/.." && pwd)"
+echo "RG34XXSP port diagnostics (no game or save contents)"
+uname -m
+[ ! -r /usr/share/batocera/batocera.arch ] || cat /usr/share/batocera/batocera.arch
+[ ! -r /etc/os-release ] || cat /etc/os-release
+echo "Motor interface:"
+ls -l /sys/class/power_supply/axp2202-battery/moto 2>/dev/null || true
+echo "Controllers:"
+for path in /sys/class/input/event*/device/name; do [ ! -r "$path" ] || printf '%s: %s\n' "$path" "$(cat "$path")"; done
+echo "Memory:"
+free -m
+echo "Bundled runtime:"
+"$gamedir/dotnet/dotnet" --list-runtimes
+echo "Native helper:"
+if [ "${1:-}" = --rumble-test ]; then
+  "$gamedir/libs.aarch64/rg34xxsp-rumble" --test
+else
+  echo "Run with --rumble-test (while the game is closed) for a 150 ms motor pulse."
+fi
